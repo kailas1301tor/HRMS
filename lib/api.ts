@@ -1,0 +1,111 @@
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://hrms-backend-s9pn.onrender.com';
+
+function getCookie(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(';').shift() || null;
+  return null;
+}
+
+export class ApiError extends Error {
+  status?: number;
+  data?: unknown;
+
+  constructor(message: string, status?: number, data?: unknown) {
+    super(message);
+    this.status = status;
+    this.data = data;
+    Object.setPrototypeOf(this, ApiError.prototype);
+  }
+}
+
+interface RequestOptions extends RequestInit {
+  params?: Record<string, string | number | boolean>;
+}
+
+async function request<T>(
+  method: string,
+  endpoint: string,
+  body?: any,
+  options: RequestOptions = {}
+): Promise<T> {
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  let url = `${BASE_URL}${cleanEndpoint}`;
+
+  // Append query params if present
+  if (options.params) {
+    const searchParams = new URLSearchParams();
+    Object.entries(options.params).forEach(([key, val]) => {
+      searchParams.append(key, String(val));
+    });
+    url += `?${searchParams.toString()}`;
+  }
+
+  const headers = new Headers(options.headers || {});
+  
+  // Set JSON headers by default unless already set
+  if (!headers.has('Content-Type') && !(body instanceof FormData)) {
+    headers.set('Content-Type', 'application/json');
+  }
+
+  // Inject session cookie/token in Authorization header if present
+  const sessionToken = getCookie('auth_session');
+  if (sessionToken && !headers.has('Authorization')) {
+    headers.set('Authorization', `Bearer ${sessionToken}`);
+  }
+
+  const config: RequestInit = {
+    ...options,
+    method,
+    headers,
+  };
+
+  if (body) {
+    config.body = body instanceof FormData ? body : JSON.stringify(body);
+  }
+
+  try {
+    const response = await fetch(url, config);
+
+    // If HTTP status is 204 No Content, return empty object/null
+    if (response.status === 204) {
+      return null as unknown as T;
+    }
+
+    let responseData: any;
+    const contentType = response.headers.get('Content-Type');
+    if (contentType && contentType.includes('application/json')) {
+      responseData = await response.json();
+    } else {
+      responseData = await response.text();
+    }
+
+    if (!response.ok) {
+      const errorMessage = responseData?.message || responseData?.error || `Request failed with status ${response.status}`;
+      throw new ApiError(errorMessage, response.status, responseData);
+    }
+
+    return responseData as T;
+  } catch (error) {
+    console.error(`🔴 API Request Error [${method} ${url}]:`, error);
+    throw error;
+  }
+}
+
+export const api = {
+  get: <T>(endpoint: string, options?: RequestOptions) => 
+    request<T>('GET', endpoint, undefined, options),
+    
+  post: <T>(endpoint: string, body?: any, options?: RequestOptions) => 
+    request<T>('POST', endpoint, body, options),
+    
+  put: <T>(endpoint: string, body?: any, options?: RequestOptions) => 
+    request<T>('PUT', endpoint, body, options),
+    
+  patch: <T>(endpoint: string, body?: any, options?: RequestOptions) => 
+    request<T>('PATCH', endpoint, body, options),
+    
+  delete: <T>(endpoint: string, options?: RequestOptions) => 
+    request<T>('DELETE', endpoint, undefined, options),
+};
