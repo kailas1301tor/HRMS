@@ -1,7 +1,12 @@
 // components/settings/settings-constants.ts
-import type { Role } from './roles-permissions'
 import type { Rule } from './leave-payroll-rules'
 import type { WorkflowTemplate } from './workflow-templates'
+
+export interface Role {
+  name: string
+  description: string
+  permissions: string[]
+}
 
 export const LEFT_COLUMN_PERMISSIONS = [
   'VIEW DASHBOARD',

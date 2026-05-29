@@ -8,11 +8,10 @@ import { CompanySettings } from './company-settings'
 import { HRMasters } from './hr-masters'
 import { LeavePayrollRules, type Rule } from './leave-payroll-rules'
 import { WorkflowTemplates, type WorkflowTemplate } from './workflow-templates'
-import { RolesPermissions, type Role } from './roles-permissions'
+import { RolesPermissions } from './roles-permissions'
 import { AssetMasters } from './asset-masters'
 import { SystemSettings } from './system-settings'
 import {
-  INITIAL_ROLES,
   INITIAL_LEAVE_TYPES,
   INITIAL_RULES,
   INITIAL_WORKFLOW_TEMPLATES,
@@ -33,7 +32,6 @@ export function SettingsPanel() {
   }
 
   // --- States that remain client-only (no backend API yet) ---
-  const [userRoles, setUserRoles] = useState<Role[]>(INITIAL_ROLES)
   const [leavePayrollRules, setLeavePayrollRules] = useState<Rule[]>(INITIAL_RULES)
   const [workflowTemplates, setWorkflowTemplates] = useState<WorkflowTemplate[]>(INITIAL_WORKFLOW_TEMPLATES)
   const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS)
@@ -93,7 +91,7 @@ export function SettingsPanel() {
         </TabsContent>
 
         <TabsContent value="roles" className="space-y-6 outline-none">
-          <RolesPermissions userRoles={userRoles} setUserRoles={setUserRoles} />
+          <RolesPermissions />
         </TabsContent>
 
         <TabsContent value="hr" className="space-y-6 outline-none">
