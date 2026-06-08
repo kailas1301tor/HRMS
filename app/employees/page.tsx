@@ -2,6 +2,7 @@
 import { Suspense } from 'react'
 import { AppShell } from '@/components/layout/app-shell'
 import { EmployeeTable } from '@/components/employees/employee-table'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export default function EmployeesPage() {
   return (
@@ -16,7 +17,7 @@ export default function EmployeesPage() {
         </div>
 
         {/* Employee Table */}
-        <Suspense fallback={<div className="h-96 w-full rounded-2xl bg-carbon/50 skeleton-shimmer" />}>
+        <Suspense fallback={<Skeleton className="h-96 w-full rounded-2xl" />}>
           <EmployeeTable />
         </Suspense>
       </div>

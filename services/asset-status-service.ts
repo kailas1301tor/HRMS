@@ -31,6 +31,7 @@ export const assetStatusService = {
       const response = await api.get<AssetStatusListResponse>('/api/master/asset-status/', { signal });
       return response.results?.data ?? fallback;
     } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') throw error;
       console.warn('🔴 Network error fetching asset statuses. Loading mock fallback.', error);
       return fallback;
     }

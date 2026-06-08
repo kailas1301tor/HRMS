@@ -27,7 +27,7 @@ interface RequestOptions extends RequestInit {
 async function request<T>(
   method: string,
   endpoint: string,
-  body?: any,
+  body?: Record<string, unknown> | object | FormData | string | null,
   options: RequestOptions = {}
 ): Promise<T> {
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
@@ -68,26 +68,34 @@ async function request<T>(
   try {
     const response = await fetch(url, config);
 
-    // If HTTP status is 204 No Content, return empty object/null
+    // If HTTP status is 204 No Content, return undefined cast to T.
+    // Callers expecting void/null should handle this at their call site.
     if (response.status === 204) {
-      return null as unknown as T;
+      return undefined as T;
     }
 
-    let responseData: any;
+    let responseData: unknown;
     const contentType = response.headers.get('Content-Type');
     if (contentType && contentType.includes('application/json')) {
-      responseData = await response.json();
+      responseData = await response.json() as unknown;
     } else {
       responseData = await response.text();
     }
 
     if (!response.ok) {
-      const errorMessage = responseData?.message || responseData?.error || `Request failed with status ${response.status}`;
+      const errBody = responseData as Record<string, unknown> | undefined;
+      const errorMessage =
+        (typeof errBody?.message === 'string' ? errBody.message : undefined) ??
+        (typeof errBody?.error === 'string' ? errBody.error : undefined) ??
+        `Request failed with status ${response.status}`;
       throw new ApiError(errorMessage, response.status, responseData);
     }
 
     return responseData as T;
   } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw error;
+    }
     console.error(`🔴 API Request Error [${method} ${url}]:`, error);
     throw error;
   }
@@ -97,13 +105,13 @@ export const api = {
   get: <T>(endpoint: string, options?: RequestOptions) => 
     request<T>('GET', endpoint, undefined, options),
     
-  post: <T>(endpoint: string, body?: any, options?: RequestOptions) => 
+  post: <T>(endpoint: string, body?: Record<string, unknown> | object | FormData | string | null, options?: RequestOptions) => 
     request<T>('POST', endpoint, body, options),
     
-  put: <T>(endpoint: string, body?: any, options?: RequestOptions) => 
+  put: <T>(endpoint: string, body?: Record<string, unknown> | object | FormData | string | null, options?: RequestOptions) => 
     request<T>('PUT', endpoint, body, options),
     
-  patch: <T>(endpoint: string, body?: any, options?: RequestOptions) => 
+  patch: <T>(endpoint: string, body?: Record<string, unknown> | object | FormData | string | null, options?: RequestOptions) => 
     request<T>('PATCH', endpoint, body, options),
     
   delete: <T>(endpoint: string, options?: RequestOptions) => 

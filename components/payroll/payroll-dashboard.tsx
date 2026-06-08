@@ -35,7 +35,7 @@ export function PayrollDashboard() {
   return (
     <div className="space-y-6">
       {/* Summary Bar */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-card border border-border rounded-xl p-5">
           <div className="flex items-center justify-between mb-3">
             <div className="p-2 rounded-lg bg-violet-core/20">
@@ -87,33 +87,33 @@ export function PayrollDashboard() {
       <PayrollTrendsChart />
 
       {/* Toolbar */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
+      <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+        <div className="flex items-center justify-center md:justify-start gap-3">
           <Button variant="outline" size="icon">
             <ChevronLeft className="w-4 h-4" />
           </Button>
-          <div className="px-4 py-2 bg-midnight rounded-lg">
+          <div className="px-4 py-2 bg-midnight rounded-lg min-w-32 text-center">
             <span className="text-sm font-medium text-cloud">{selectedMonth}</span>
           </div>
           <Button variant="outline" size="icon">
             <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
-        <div className="flex items-center gap-3 flex-1 justify-end">
-          <div className="relative max-w-sm">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Search employees..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 bg-midnight border-border"
+              className="pl-9 w-full bg-midnight border-border"
             />
           </div>
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" className="gap-2 justify-center">
             <Download className="w-4 h-4" />
             Export WPS
           </Button>
-          <Button className="gap-2 bg-violet-core hover:bg-violet-deep">
+          <Button className="gap-2 bg-violet-core hover:bg-violet-deep justify-center">
             <FileText className="w-4 h-4" />
             Generate Payslips
           </Button>

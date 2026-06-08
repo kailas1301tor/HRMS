@@ -192,3 +192,37 @@ When fulfilling tasks:
 3.  **Strict Compilation:** Run local compilation checks (e.g., `npm run build` or `next build`) before final delivery to ensure zero syntax or type-check crashes.
 4.  **Clickable Schema:** Reference exact code files using markdown anchors (`[filename](file:///path/to/file)`) in output communications.
 5.  **Output Path Label:** Every component block you create must start with a line comment outlining the full path of the file (e.g., `// components/employees/employee-table.tsx`).
+
+---
+
+## 12. CUSTOM HOOKS ARCHITECTURE
+
+### Mandatory Logic Extraction
+*   **All business logic MUST live in custom hooks.** Components are strictly render-only shells.
+*   Every piece of state (`useState`), side effect (`useEffect`), data fetching, computed/derived values, and event handlers must be extracted into a custom hook.
+*   Components should import the hook and destructure its return values for rendering only.
+
+### Co-location Rule
+*   Custom hooks MUST be placed in the **same folder as the component** that uses them.
+*   Example: `components/assets/useAssetsTable.ts` is consumed by `components/assets/assets-table.tsx`.
+*   Global/shared hooks (used across 3+ unrelated domains) may remain in the root `hooks/` directory.
+
+### Hook Naming & File Conventions
+*   **File name**: camelCase with `use` prefix (e.g., `useAssetsTable.ts`).
+*   **Export**: Named export matching the file name (e.g., `export function useAssetsTable()`).
+*   **Return type**: Always explicitly declare a return type interface (e.g., `UseAssetsTableReturn`).
+*   **Max 100 lines per hook file**. If a hook grows beyond this, split it into focused sub-hooks (e.g., `useRolesData.ts`, `useRoleForm.ts`, `useRoleActions.ts`).
+
+### What Stays in the Component
+*   JSX markup and layout.
+*   `className` / `cn()` composition.
+*   Inline event handler wiring (e.g., `onClick={() => actions.handleDelete(id)}`).
+*   Component-local animation/transition definitions from framer-motion.
+
+### What Goes Into the Hook
+*   All `useState`, `useEffect`, `useTransition`, `useCallback`, `useMemo`, `useReducer` calls.
+*   All data fetching (`assetService.getAssets(...)`, `employeeService.getEmployees(...)`, etc.).
+*   URL search params reading and updating (`useSearchParams`, `useRouter`, `usePathname`).
+*   Form setup (`react-hook-form`'s `useForm`, `register`, `handleSubmit`, `control`, `reset`, `errors`).
+*   All handler functions (`handleDelete`, `handleSubmit`, `handleSort`, `executeDelete`, etc.).
+*   All derived/computed values (`sortedEmployees`, `totalValue`, `inServiceCount`, etc.).

@@ -1,7 +1,6 @@
 // components/settings/VendorsMaster.tsx
 'use client'
 
-import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -18,10 +17,10 @@ import {
   AlertDialogAction,
 } from '@/components/ui/alert-dialog'
 import { Plus, Trash2, Edit3, Loader2 } from 'lucide-react'
-import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { vendorService, type FrontendVendor } from '@/services/vendor-service'
+import { useVendorsMaster } from './useVendorsMaster'
+import type { FrontendVendor } from '@/services/vendor-service'
 import type { AssetType } from '@/services/asset-type-service'
 
 interface VendorsMasterProps {
@@ -32,93 +31,26 @@ interface VendorsMasterProps {
 }
 
 export function VendorsMaster({ vendors, assetTypes, isLoading, onRefresh }: VendorsMasterProps) {
-  const [isVendorModalOpen, setIsVendorModalOpen] = useState(false)
-  const [editingVendor, setEditingVendor] = useState<FrontendVendor | null>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
-  // Form fields
-  const [vendorName, setVendorName] = useState('')
-  const [selectedAssetTypeId, setSelectedAssetTypeId] = useState('')
-  const [vendorDescription, setVendorDescription] = useState('')
-
-  // Delete state
-  const [deleteTarget, setDeleteTarget] = useState<FrontendVendor | null>(null)
-  const [isDeleting, setIsDeleting] = useState(false)
-
-  const resetForm = (): void => {
-    setVendorName('')
-    setSelectedAssetTypeId('')
-    setVendorDescription('')
-    setEditingVendor(null)
-  }
-
-  const handleOpenAdd = (): void => {
-    resetForm()
-    setIsVendorModalOpen(true)
-  }
-
-  const handleOpenEdit = (vendor: FrontendVendor): void => {
-    setVendorName(vendor.name)
-    setSelectedAssetTypeId(String(vendor.assetTypeId))
-    setVendorDescription(vendor.description)
-    setEditingVendor(vendor)
-    setIsVendorModalOpen(true)
-  }
-
-  const handleSaveVendor = async (e: React.FormEvent): Promise<void> => {
-    e.preventDefault()
-    if (!vendorName.trim() || !selectedAssetTypeId) {
-      toast.error('Name and Asset Type are required')
-      return
-    }
-
-    setIsSubmitting(true)
-    try {
-      const payload = {
-        name: vendorName.trim().toUpperCase(),
-        assetTypeId: Number(selectedAssetTypeId),
-        description: vendorDescription.trim(),
-      }
-
-      if (editingVendor) {
-        await vendorService.updateVendor({ id: editingVendor.id, ...payload })
-        toast.success('Vendor updated successfully')
-      } else {
-        await vendorService.createVendor(payload)
-        toast.success('Vendor created successfully')
-      }
-      setIsVendorModalOpen(false)
-      resetForm()
-      await onRefresh()
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to save vendor'
-      toast.error(message)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const handleDeleteVendor = async (): Promise<void> => {
-    if (!deleteTarget) return
-
-    setIsDeleting(true)
-    try {
-      await vendorService.deleteVendor(deleteTarget.id)
-      toast.success('Vendor deleted successfully')
-      setDeleteTarget(null)
-      await onRefresh()
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to delete vendor'
-      toast.error(message)
-    } finally {
-      setIsDeleting(false)
-    }
-  }
-
-  const getAssetTypeName = (typeId: number): string => {
-    const found = assetTypes.find((t) => t.id === typeId)
-    return found ? found.name : 'Unknown'
-  }
+  const {
+    isVendorModalOpen,
+    setIsVendorModalOpen,
+    editingVendor,
+    isSubmitting,
+    vendorName,
+    setVendorName,
+    selectedAssetTypeId,
+    setSelectedAssetTypeId,
+    vendorDescription,
+    setVendorDescription,
+    deleteTarget,
+    setDeleteTarget,
+    isDeleting,
+    handleOpenAdd,
+    handleOpenEdit,
+    handleSaveVendor,
+    handleDeleteVendor,
+    getAssetTypeName,
+  } = useVendorsMaster({ assetTypes, onRefresh })
 
   return (
     <>

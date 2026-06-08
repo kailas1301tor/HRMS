@@ -1,14 +1,14 @@
 // components/settings/system-settings.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Bell, Shield, Palette } from 'lucide-react'
-import { useTheme } from 'next-themes'
+import { useSystemSettings } from './useSystemSettings'
 
 interface SystemSettingsProps {
   notifications: {
@@ -18,24 +18,18 @@ interface SystemSettingsProps {
     payrollUpdates: boolean
     systemUpdates: boolean
   }
-  setNotifications: (notifs: any) => void
+  setNotifications: (notifs: SystemSettingsProps['notifications']) => void
 }
 
 export function SystemSettings({ notifications, setNotifications }: SystemSettingsProps) {
-  const [lang, setLang] = useState('English (US)')
-  const { theme, setTheme } = useTheme()
-  const [mounted, setMounted] = useState(false)
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  const handleToggleNotification = (key: keyof typeof notifications, checked: boolean) => {
-    setNotifications({
-      ...notifications,
-      [key]: checked,
-    })
-  }
+  const {
+    lang,
+    setLang,
+    theme,
+    setTheme,
+    mounted,
+    handleToggleNotification,
+  } = useSystemSettings({ notifications, setNotifications })
 
   return (
     <div className="space-y-6 outline-none">
@@ -132,7 +126,7 @@ export function SystemSettings({ notifications, setNotifications }: SystemSettin
               <div className="space-y-2">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400 font-sans">Preferred Theme</Label>
                 {!mounted ? (
-                  <div className="h-10 bg-midnight border border-border rounded-xl animate-pulse" />
+                  <Skeleton className="h-10 w-full rounded-xl" />
                 ) : (
                   <Select value={theme} onValueChange={setTheme}>
                     <SelectTrigger className="bg-midnight border-border rounded-xl text-xs text-slate-300 cursor-pointer">

@@ -1,8 +1,6 @@
 // components/attendance/attendance-sheet.tsx
-
 'use client'
 
-import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -26,40 +24,25 @@ import {
 import {
   STATUS_CONFIG,
   SHIFT_CONFIG,
-  generateAttendanceData,
 } from './attendance-constants'
+import { useAttendanceSheet } from './useAttendanceSheet'
 
 export function AttendanceSheet() {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedDate, setSelectedDate] = useState(new Date())
-  const [attendanceData] = useState(generateAttendanceData)
-
-  const filteredData = attendanceData.filter(
-    (record) =>
-      record.employeeName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      record.employeeId.toLowerCase().includes(searchQuery.toLowerCase())
-  )
-
-  const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    })
-  }
-
-  const navigateDate = (days: number) => {
-    const newDate = new Date(selectedDate)
-    newDate.setDate(newDate.getDate() + days)
-    setSelectedDate(newDate)
-  }
+  const {
+    searchQuery,
+    setSearchQuery,
+    selectedDate,
+    setSelectedDate,
+    filteredData,
+    formatDate,
+    navigateDate,
+  } = useAttendanceSheet()
 
   return (
     <div className="space-y-6">
       {/* Date Navigation */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
+      <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center lg:justify-between">
+        <div className="flex items-center gap-4 flex-wrap">
           <div className="flex items-center gap-2">
             <Button variant="outline" size="icon" onClick={() => navigateDate(-1)}>
               <ChevronLeft className="w-4 h-4" />
@@ -76,18 +59,18 @@ export function AttendanceSheet() {
             Today
           </Button>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="relative">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="relative flex-1 sm:flex-initial">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Search employees..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 w-64 bg-midnight border-border"
+              className="pl-9 w-full sm:w-64 bg-midnight border-border"
             />
           </div>
           <Select defaultValue="all">
-            <SelectTrigger className="w-40 bg-midnight border-border">
+            <SelectTrigger className="w-full sm:w-40 bg-midnight border-border">
               <SelectValue placeholder="Filter by shift" />
             </SelectTrigger>
             <SelectContent>
@@ -97,7 +80,7 @@ export function AttendanceSheet() {
               <SelectItem value="night">Night</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" className="gap-2">
+          <Button variant="outline" className="gap-2 justify-center">
             <Download className="w-4 h-4" />
             Export
           </Button>
@@ -105,7 +88,7 @@ export function AttendanceSheet() {
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
         {Object.entries(STATUS_CONFIG).map(([key, config]) => {
           const count = filteredData.filter((d) => d.status === key).length
           return (

@@ -1,11 +1,10 @@
 // components/assets/assets-table.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useRouter, usePathname, useSearchParams } from 'next/navigation'
 import { AnimatePresence } from 'framer-motion'
-import { Search, Plus, Download, Loader2, Info, HelpCircle } from 'lucide-react'
+import { Search, Plus, Download, Loader2, HelpCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import { Input } from '@/components/ui/input'
 import {
   Select,
@@ -23,124 +22,42 @@ import {
   AlertDialogFooter,
   AlertDialogCancel,
 } from '@/components/ui/alert-dialog'
-import { toast } from 'sonner'
 import { cn } from '@/lib/utils'
 import { AssetsTableRow } from './assets-table-row'
-import { INITIAL_ASSETS } from './assets-constants'
-import { assetService, type BackendAsset, type AssetDropdowns } from '@/services/asset-service'
-import { departmentService, type Department } from '@/services/department-service'
+import { type BackendAsset } from '@/services/asset-service'
 import { AddAssetModal } from './add-asset-modal'
-import { ViewAssetModal } from './view-asset-modal'
+import { useAssetsTable } from './useAssetsTable'
 
 export function AssetsTable() {
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
+  const {
+    assetsList,
+    pagination,
+    dropdowns,
+    departments,
+    isTableLoading,
+    selectedAsset,
+    isAddOpen,
+    deleteTargetId,
+    isDeleting,
+    searchQuery,
+    statusFilter,
+    typeFilter,
+    pageParam,
+    totalValue,
+    inServiceCount,
+    setSelectedAsset,
+    setIsAddOpen,
+    setDeleteTargetId,
+    fetchAssets,
+    updateQueryParams,
+    executeDelete,
+  } = useAssetsTable()
 
-  const [assetsList, setAssetsList] = useState<BackendAsset[]>([])
-  const [pagination, setPagination] = useState({ totalCount: 0, totalPages: 1, currentPage: 1 })
-  const [dropdowns, setDropdowns] = useState<AssetDropdowns | null>(null)
-  const [departments, setDepartments] = useState<Department[]>([])
-  const [isTableLoading, setIsTableLoading] = useState(false)
-
-  // Modals state
-  const [selectedAsset, setSelectedAsset] = useState<BackendAsset | null>(null)
-  const [viewAssetId, setViewAssetId] = useState<number | null>(null)
-  const [isAddOpen, setIsAddOpen] = useState(false)
-  const [isViewOpen, setIsViewOpen] = useState(false)
-  const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null)
-  const [isDeleting, setIsDeleting] = useState(false)
-
-  // URL State filters
-  const searchQuery = searchParams.get('search') || ''
-  const statusFilter = searchParams.get('status') || 'all'
-  const typeFilter = searchParams.get('asset_type') || 'all'
-  const pageParam = Number(searchParams.get('page')) || 1
-
-  const fetchAssets = async () => {
-    setIsTableLoading(true)
-    try {
-      const response = await assetService.getAssets(
-        {
-          page: pageParam,
-          page_size: 10,
-          search: searchQuery || undefined,
-          status: statusFilter !== 'all' ? statusFilter : undefined,
-          asset_type: typeFilter !== 'all' ? typeFilter : undefined,
-        },
-        INITIAL_ASSETS
-      )
-      setAssetsList(response.data)
-      setPagination({
-        totalCount: response.total_count,
-        totalPages: response.total_pages,
-        currentPage: response.current_page,
-      })
-    } catch (error) {
-      toast.error('Failed to load assets list')
-    } finally {
-      setIsTableLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    fetchAssets()
-  }, [searchQuery, statusFilter, typeFilter, pageParam])
-
-  useEffect(() => {
-    async function loadMetadata() {
-      try {
-        const [dropData, deptData] = await Promise.all([
-          assetService.getAssetDropdowns(),
-          departmentService.getDepartments(),
-        ])
-        setDropdowns(dropData)
-        setDepartments(deptData)
-      } catch (err) {
-        console.error('Failed to fetch assets metadata filters:', err)
-      }
-    }
-    loadMetadata()
-  }, [])
-
-  const updateQueryParams = (updates: Record<string, string | null>) => {
-    const nextParams = new URLSearchParams(searchParams.toString())
-    Object.entries(updates).forEach(([key, value]) => {
-      if (value === null || value === '' || value === 'all') {
-        nextParams.delete(key)
-      } else {
-        nextParams.set(key, value)
-      }
-    })
-    router.push(`${pathname}?${nextParams.toString()}`)
-  }
-
-  const executeDelete = async () => {
-    if (deleteTargetId === null) return
-    setIsDeleting(true)
-    try {
-      await assetService.deleteAsset(deleteTargetId)
-      toast.success('Asset disposed successfully')
-      setDeleteTargetId(null)
-      fetchAssets()
-    } catch (err: any) {
-      toast.error(err.message || 'Failed to dispose asset')
-    } finally {
-      setIsDeleting(false)
-    }
-  }
-
-  // Statistics
-  const totalValue = assetsList.reduce((sum, a) => sum + (a.purchase_cost ? parseFloat(a.purchase_cost) : 0), 0)
-  const inServiceCount = assetsList.filter((a) => {
-    const s = a.status?.toLowerCase() || ''
-    return s.includes('assigned') || s.includes('service')
-  }).length
 
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Total Assets', val: pagination.totalCount },
           { label: 'In Service', val: inServiceCount },
@@ -155,19 +72,19 @@ export function AssetsTable() {
       </div>
 
       {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-3 flex-1 w-full">
-          <div className="relative flex-1 min-w-[200px] max-w-sm">
+      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Search assets..."
               value={searchQuery}
               onChange={(e) => updateQueryParams({ search: e.target.value, page: '1' })}
-              className="pl-9 bg-midnight border-border"
+              className="pl-9 w-full bg-midnight border-border"
             />
           </div>
           <Select value={statusFilter} onValueChange={(val) => updateQueryParams({ status: val, page: '1' })}>
-            <SelectTrigger className="w-40 bg-midnight border-border">
+            <SelectTrigger className="w-full sm:w-40 bg-midnight border-border">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -178,7 +95,7 @@ export function AssetsTable() {
             </SelectContent>
           </Select>
           <Select value={typeFilter} onValueChange={(val) => updateQueryParams({ asset_type: val, page: '1' })}>
-            <SelectTrigger className="w-40 bg-midnight border-border">
+            <SelectTrigger className="w-full sm:w-40 bg-midnight border-border">
               <SelectValue placeholder="Category" />
             </SelectTrigger>
             <SelectContent>
@@ -189,8 +106,8 @@ export function AssetsTable() {
             </SelectContent>
           </Select>
         </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
-          <Button variant="outline" className="gap-2 border-border hover:bg-slate-800">
+        <div className="flex items-center gap-2 justify-end sm:justify-start">
+          <Button variant="outline" className="gap-2 border-border text-cloud flex-1 sm:flex-none justify-center">
             <Download className="w-4 h-4" /> Export
           </Button>
           <Button
@@ -198,7 +115,7 @@ export function AssetsTable() {
               setSelectedAsset(null)
               setIsAddOpen(true)
             }}
-            className="gap-2 bg-violet-core hover:bg-violet-deep text-white"
+            className="gap-2 bg-violet-core hover:bg-violet-deep text-white flex-1 sm:flex-none justify-center animate-none"
           >
             <Plus className="w-4 h-4" /> Add Asset
           </Button>
@@ -222,15 +139,20 @@ export function AssetsTable() {
             <tbody>
               {isTableLoading ? (
                 Array.from({ length: 5 }).map((_, i) => (
-                  <tr key={i} className="border-b border-border/50 animate-pulse">
+                  <tr key={i} className="border-b border-border/50">
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-slate-800" />
-                        <div className="space-y-1.5"><div className="h-3 bg-slate-700 rounded w-28" /><div className="h-2 bg-slate-800 rounded w-16" /></div>
+                        <Skeleton className="w-10 h-10 rounded-lg shrink-0" />
+                        <div className="space-y-1.5">
+                          <Skeleton className="h-3 rounded w-28" />
+                          <Skeleton className="h-2 rounded w-16" />
+                        </div>
                       </div>
                     </td>
                     {Array.from({ length: 5 }).map((_, j) => (
-                      <td key={j} className="px-4 py-3"><div className={cn("h-4 bg-slate-800 rounded w-20", j === 4 ? "ml-auto" : "")} /></td>
+                      <td key={j} className="px-4 py-3">
+                        <Skeleton className={cn("h-4 rounded w-20", j === 4 ? "ml-auto" : "")} />
+                      </td>
                     ))}
                     <td className="px-4 py-3"></td>
                   </tr>
@@ -254,10 +176,6 @@ export function AssetsTable() {
                       key={asset.id}
                       asset={asset}
                       index={index}
-                      onViewDetails={(id) => {
-                        setViewAssetId(id)
-                        setIsViewOpen(true)
-                      }}
                       onEdit={(a) => {
                         setSelectedAsset(a)
                         setIsAddOpen(true)
@@ -321,11 +239,6 @@ export function AssetsTable() {
         departments={departments}
       />
 
-      <ViewAssetModal
-        assetId={viewAssetId}
-        open={isViewOpen}
-        onOpenChange={setIsViewOpen}
-      />
 
       <AlertDialog open={deleteTargetId !== null} onOpenChange={(open) => !open && setDeleteTargetId(null)}>
         <AlertDialogContent className="bg-card border border-border/80 rounded-2xl p-6 shadow-2xl max-w-md">

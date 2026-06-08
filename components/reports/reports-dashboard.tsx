@@ -57,12 +57,12 @@ export function ReportsDashboard() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="bg-muted/50">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="headcount">Headcount</TabsTrigger>
-          <TabsTrigger value="attendance">Attendance</TabsTrigger>
-          <TabsTrigger value="payroll">Payroll</TabsTrigger>
-          <TabsTrigger value="templates">Report Templates</TabsTrigger>
+        <TabsList className="bg-muted/50 p-1.5 rounded-xl h-auto gap-1 flex w-full overflow-x-auto scrollbar-none justify-start select-none">
+          <TabsTrigger value="overview" className="shrink-0">Overview</TabsTrigger>
+          <TabsTrigger value="headcount" className="shrink-0">Headcount</TabsTrigger>
+          <TabsTrigger value="attendance" className="shrink-0">Attendance</TabsTrigger>
+          <TabsTrigger value="payroll" className="shrink-0">Payroll</TabsTrigger>
+          <TabsTrigger value="templates" className="shrink-0">Report Templates</TabsTrigger>
         </TabsList>
 
         {/* Overview Tab */}

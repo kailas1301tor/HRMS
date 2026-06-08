@@ -1,14 +1,14 @@
 // components/settings/rules/rules-wizard-dialog.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import type { Rule, LeaveRule, PayrollRule } from '../leave-payroll-rules'
+import { useRulesWizardDialog } from './useRulesWizardDialog'
+import type { Rule } from '../leave-payroll-rules'
 
 interface RulesWizardDialogProps {
   open: boolean
@@ -27,107 +27,47 @@ export function RulesWizardDialog({
   leavePayrollRules,
   onSaveRule,
 }: RulesWizardDialogProps) {
-  const [rulesWizardStep, setRulesWizardStep] = useState<'select' | 'leave' | 'payroll'>('select')
-
-  // Leave Rule Form Fields
-  const [ruleLeaveType, setRuleLeaveType] = useState('')
-  const [ruleMaxDays, setRuleMaxDays] = useState('')
-  const [ruleCarryForward, setRuleCarryForward] = useState('')
-  const [ruleAccrualRate, setRuleAccrualRate] = useState('')
-  const [ruleAccrualFreq, setRuleAccrualFreq] = useState('Monthly')
-  const [ruleIsPaid, setRuleIsPaid] = useState(true)
-  const [ruleDescription, setRuleDescription] = useState('')
-
-  // Payroll Rule Form Fields
-  const [rulePayName, setRulePayName] = useState('')
-  const [rulePayCategory, setRulePayCategory] = useState<'Allowance' | 'Deduction'>('Allowance')
-  const [rulePayTrigger, setRulePayTrigger] = useState('None (Fixed / Flat)')
-  const [rulePayCalcType, setRulePayCalcType] = useState<'Fixed Amount' | 'Percentage (%)'>('Fixed Amount')
-  const [rulePayValue, setRulePayValue] = useState('')
-  const [rulePayBase, setRulePayBase] = useState('Basic Salary')
-  const [rulePayApplyAutomatically, setRulePayApplyAutomatically] = useState(true)
-
-  useEffect(() => {
-    if (open) {
-      if (ruleEditIndex !== null) {
-        const rule = leavePayrollRules[ruleEditIndex]
-        if (rule) {
-          if (rule.type === 'leave') {
-            setRuleLeaveType(rule.leaveType)
-            setRuleMaxDays(rule.maxDays)
-            setRuleCarryForward(rule.carryForwardLimit)
-            setRuleAccrualRate(rule.accrualRate)
-            setRuleAccrualFreq(rule.accrualFrequency)
-            setRuleIsPaid(rule.isPaid)
-            setRuleDescription(rule.description)
-            setRulesWizardStep('leave')
-          } else {
-            setRulePayName(rule.name)
-            setRulePayCategory(rule.category)
-            setRulePayTrigger(rule.triggerBasis)
-            setRulePayCalcType(rule.calculationType)
-            setRulePayValue(rule.value)
-            setRulePayBase(rule.baseIfPercentage)
-            setRulePayApplyAutomatically(rule.applyAutomatically)
-            setRulesWizardStep('payroll')
-          }
-        }
-      } else {
-        setRulesWizardStep('select')
-        setRuleLeaveType(leaveTypes[0] || 'ANNUAL LEAVE')
-        setRuleMaxDays('')
-        setRuleCarryForward('')
-        setRuleAccrualRate('')
-        setRuleAccrualFreq('Monthly')
-        setRuleIsPaid(true)
-        setRuleDescription('')
-
-        setRulePayName('')
-        setRulePayCategory('Allowance')
-        setRulePayTrigger('None (Fixed / Flat)')
-        setRulePayCalcType('Fixed Amount')
-        setRulePayValue('')
-        setRulePayBase('Basic Salary')
-        setRulePayApplyAutomatically(true)
-      }
-    }
-  }, [open, ruleEditIndex, leavePayrollRules, leaveTypes])
-
-  const handleSaveLeaveRule = (e: React.FormEvent) => {
-    e.preventDefault()
-    const newRule: LeaveRule = {
-      id: ruleEditIndex !== null ? leavePayrollRules[ruleEditIndex]?.id || 'rule-' + Date.now() : 'rule-' + Date.now(),
-      type: 'leave',
-      leaveType: ruleLeaveType || leaveTypes[0] || 'ANNUAL LEAVE',
-      maxDays: ruleMaxDays.trim(),
-      carryForwardLimit: ruleCarryForward.trim(),
-      accrualRate: ruleAccrualRate.trim(),
-      accrualFrequency: ruleAccrualFreq,
-      isPaid: ruleIsPaid,
-      description: ruleDescription.trim(),
-    }
-    onSaveRule(ruleEditIndex, newRule)
-    onOpenChange(false)
-  }
-
-  const handleSavePayrollRule = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!rulePayName.trim()) return
-
-    const newRule: PayrollRule = {
-      id: ruleEditIndex !== null ? leavePayrollRules[ruleEditIndex]?.id || 'rule-' + Date.now() : 'rule-' + Date.now(),
-      type: 'payroll',
-      name: rulePayName.trim(),
-      category: rulePayCategory,
-      triggerBasis: rulePayTrigger,
-      calculationType: rulePayCalcType,
-      value: rulePayValue.trim(),
-      baseIfPercentage: rulePayBase,
-      applyAutomatically: rulePayApplyAutomatically,
-    }
-    onSaveRule(ruleEditIndex, newRule)
-    onOpenChange(false)
-  }
+  const {
+    rulesWizardStep,
+    setRulesWizardStep,
+    ruleLeaveType,
+    setRuleLeaveType,
+    ruleMaxDays,
+    setRuleMaxDays,
+    ruleCarryForward,
+    setRuleCarryForward,
+    ruleAccrualRate,
+    setRuleAccrualRate,
+    ruleAccrualFreq,
+    setRuleAccrualFreq,
+    ruleIsPaid,
+    setRuleIsPaid,
+    ruleDescription,
+    setRuleDescription,
+    rulePayName,
+    setRulePayName,
+    rulePayCategory,
+    setRulePayCategory,
+    rulePayTrigger,
+    setRulePayTrigger,
+    rulePayCalcType,
+    setRulePayCalcType,
+    rulePayValue,
+    setRulePayValue,
+    rulePayBase,
+    setRulePayBase,
+    rulePayApplyAutomatically,
+    setRulePayApplyAutomatically,
+    handleSaveLeaveRule,
+    handleSavePayrollRule,
+  } = useRulesWizardDialog({
+    open,
+    onOpenChange,
+    leaveTypes,
+    ruleEditIndex,
+    leavePayrollRules,
+    onSaveRule,
+  })
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -243,7 +183,7 @@ export function RulesWizardDialog({
               </div>
               <div className="space-y-2">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Category</Label>
-                <Select value={rulePayCategory} onValueChange={(val: any) => setRulePayCategory(val)}>
+                <Select value={rulePayCategory} onValueChange={setRulePayCategory}>
                   <SelectTrigger className="bg-midnight/55 border-border rounded-xl text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Allowance">Allowance</SelectItem>
@@ -267,7 +207,7 @@ export function RulesWizardDialog({
               </div>
               <div className="space-y-2">
                 <Label className="text-xs font-semibold uppercase tracking-wider text-slate-400">Calculation Type</Label>
-                <Select value={rulePayCalcType} onValueChange={(val: any) => setRulePayCalcType(val)}>
+                <Select value={rulePayCalcType} onValueChange={setRulePayCalcType}>
                   <SelectTrigger className="bg-midnight/55 border-border rounded-xl text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Fixed Amount">Fixed Amount</SelectItem>

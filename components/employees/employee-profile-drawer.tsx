@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   X,
   Building2,
@@ -24,6 +25,9 @@ import { AssetsTab } from './profile/assets-tab'
 import { AttendanceTab } from './profile/attendance-tab'
 import { LeaveTab } from './profile/leave-tab'
 import { ActivityTab } from './profile/activity-tab'
+import { OnboardingChecklistTab } from './profile/onboarding-checklist-tab'
+import { OffboardingChecklistTab } from './profile/offboarding-checklist-tab'
+import { ClipboardCheck, FileX } from 'lucide-react'
 import { employeeService } from '@/services/employee-service'
 
 interface EmployeeProfileDrawerProps {
@@ -35,6 +39,8 @@ interface EmployeeProfileDrawerProps {
 
 const tabs = [
   { id: 'personal', label: 'Personal', icon: Building2 },
+  { id: 'onboarding', label: 'Onboarding', icon: ClipboardCheck },
+  { id: 'offboarding', label: 'Offboarding', icon: FileX },
   { id: 'documents', label: 'Documents', icon: FileText },
   { id: 'assets', label: 'Assets', icon: Package },
   { id: 'attendance', label: 'Attendance', icon: Clock },
@@ -48,17 +54,22 @@ export function EmployeeProfileDrawer({ employee, open, onClose, onEdit }: Emplo
   const [isLoadingDetail, setIsLoadingDetail] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const fetchDetail = async (id: number) => {
+  const fetchDetail = async (id: number, signal?: AbortSignal) => {
     setIsLoadingDetail(true)
     setError(null)
     try {
-      const data = await employeeService.getEmployee(id)
+      const data = await employeeService.getEmployee(id, signal)
       setDetailedEmployee(data)
-    } catch (err: any) {
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === 'AbortError') {
+        return
+      }
       console.error('Failed to load employee details:', err)
-      setError(err.message || 'Failed to load employee details')
+      setError(err instanceof Error ? err.message : 'Failed to load employee details')
     } finally {
-      setIsLoadingDetail(false)
+      if (!signal?.aborted) {
+        setIsLoadingDetail(false)
+      }
     }
   }
 
@@ -68,7 +79,11 @@ export function EmployeeProfileDrawer({ employee, open, onClose, onEdit }: Emplo
       setError(null)
       return
     }
-    fetchDetail(employee.id)
+    const controller = new AbortController()
+    fetchDetail(employee.id, controller.signal)
+    return () => {
+      controller.abort()
+    }
   }, [open, employee?.id])
 
   if (!employee) return null
@@ -174,6 +189,12 @@ export function EmployeeProfileDrawer({ employee, open, onClose, onEdit }: Emplo
                   <PersonalTab employee={displayEmployee} />
                 )
               )}
+              {activeTab === 'onboarding' && (
+                <OnboardingChecklistTab employeeId={displayEmployee.id} />
+              )}
+              {activeTab === 'offboarding' && (
+                <OffboardingChecklistTab employeeId={displayEmployee.id} />
+              )}
               {activeTab === 'documents' && <DocumentsTab />}
               {activeTab === 'assets' && <AssetsTab />}
               {activeTab === 'attendance' && <AttendanceTab />}
@@ -189,34 +210,34 @@ export function EmployeeProfileDrawer({ employee, open, onClose, onEdit }: Emplo
 
 function PersonalTabSkeleton() {
   return (
-    <div className="space-y-6 animate-pulse">
+    <div className="space-y-6">
       {/* Contact Section Skeleton */}
       <div>
-        <div className="h-3 w-32 bg-slate-700/80 rounded mb-3" />
+        <Skeleton className="h-3 w-32 rounded mb-3" />
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {Array.from({ length: 3 }).map((_, i) => (
             <div key={i} className="bg-midnight/60 border border-border/40 rounded-xl p-3 flex flex-col gap-2">
-              <div className="w-8 h-8 rounded-lg bg-slate-800/80 animate-pulse" />
+              <Skeleton className="w-8 h-8 rounded-lg" />
               <div className="space-y-1.5">
-                <div className="h-2 w-12 bg-slate-800/80 rounded" />
-                <div className="h-3 w-20 bg-slate-700/80 rounded" />
+                <Skeleton className="h-2 w-12 rounded" />
+                <Skeleton className="h-3 w-20 rounded" />
               </div>
             </div>
           ))}
         </div>
-        <div className="h-10 bg-midnight/40 border border-border/45 rounded-xl mt-3 animate-pulse" />
+        <Skeleton className="h-10 w-full rounded-xl mt-3" />
       </div>
 
       {/* Employment Section Skeleton */}
       <div>
-        <div className="h-3 w-28 bg-slate-700/80 rounded mb-3" />
+        <Skeleton className="h-3 w-28 rounded mb-3" />
         <div className="grid grid-cols-2 gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <div key={i} className="bg-midnight/40 border border-border/40 rounded-xl p-4 flex items-start gap-3">
-              <div className="w-9 h-9 rounded-xl bg-slate-800/80 shrink-0" />
+              <Skeleton className="w-9 h-9 rounded-xl shrink-0" />
               <div className="space-y-1.5 flex-1">
-                <div className="h-2 w-12 bg-slate-850 rounded" />
-                <div className="h-3.5 w-24 bg-slate-700/80 rounded" />
+                <Skeleton className="h-2 w-12 rounded" />
+                <Skeleton className="h-3.5 w-24 rounded" />
               </div>
             </div>
           ))}
@@ -225,8 +246,8 @@ function PersonalTabSkeleton() {
 
       {/* Address & Bank Skeleton */}
       <div className="space-y-4">
-        <div className="h-3 w-20 bg-slate-700/80 rounded" />
-        <div className="h-20 bg-midnight/40 border border-border/40 rounded-xl animate-pulse" />
+        <Skeleton className="h-3 w-20 rounded" />
+        <Skeleton className="h-20 w-full rounded-xl" />
       </div>
     </div>
   )

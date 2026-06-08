@@ -1,7 +1,6 @@
 // components/settings/department-settings-card.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -19,116 +18,32 @@ import {
   AlertDialogAction,
 } from '@/components/ui/alert-dialog'
 import { Plus, Trash2, Edit3, Loader2 } from 'lucide-react'
-import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
-import { departmentService, type Department } from '@/services/department-service'
-import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import { type Department } from '@/services/department-service'
+import { useDepartmentSettings } from './useDepartmentSettings'
 
 export function DepartmentSettingsCard() {
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-
-  const selectedDeptId = searchParams.get('dept_id') || ''
-
-  const setSelectedDeptId = (id: string) => {
-    const params = new URLSearchParams(searchParams.toString())
-    if (id) {
-      params.set('dept_id', id)
-    } else {
-      params.delete('dept_id')
-    }
-    router.replace(`${pathname}?${params.toString()}`)
-  }
-
-  const [departments, setDepartments] = useState<Department[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  
-  // Add/Edit Dialog State
-  const [isOpen, setIsOpen] = useState(false)
-  const [editId, setEditId] = useState<number | null>(null)
-  const [formName, setFormName] = useState('')
-  const [formDescription, setFormDescription] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
-  // Delete Dialog State
-  const [deleteId, setDeleteId] = useState<number | null>(null)
-  const [isDeleting, setIsDeleting] = useState(false)
-
-  const loadDepartments = async () => {
-    setIsLoading(true)
-    try {
-      const data = await departmentService.getDepartments()
-      setDepartments(data)
-    } catch (error) {
-      toast.error('Failed to load departments')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    loadDepartments()
-  }, [])
-
-  const handleOpenAdd = () => {
-    setFormName('')
-    setFormDescription('')
-    setEditId(null)
-    setIsOpen(true)
-  }
-
-  const handleOpenEdit = (dept: Department) => {
-    setFormName(dept.name)
-    setFormDescription(dept.description)
-    setEditId(dept.id)
-    setIsOpen(true)
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!formName.trim()) return
-
-    setIsSubmitting(true)
-    try {
-      if (editId !== null) {
-        await departmentService.updateDepartment(editId, formName.trim().toUpperCase(), formDescription.trim())
-        toast.success('Department updated successfully')
-      } else {
-        await departmentService.createDepartment(formName.trim().toUpperCase(), formDescription.trim())
-        toast.success('Department created successfully')
-      }
-      setIsOpen(false)
-      await loadDepartments()
-    } catch (error: any) {
-      const message = error.message || 'Failed to save department'
-      toast.error(message)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const handleDelete = async () => {
-    if (deleteId === null) return
-    setIsDeleting(true)
-    try {
-      await departmentService.deleteDepartment(deleteId)
-      toast.success('Department deleted successfully')
-      
-      // If we deleted the currently selected department, clear it from url params
-      if (selectedDeptId === String(deleteId)) {
-        setSelectedDeptId('')
-      }
-      
-      setDeleteId(null)
-      await loadDepartments()
-    } catch (error: any) {
-      const message = error.message || 'Failed to delete department'
-      toast.error(message)
-    } finally {
-      setIsDeleting(false)
-    }
-  }
+  const {
+    selectedDeptId,
+    departments,
+    isLoading,
+    isOpen,
+    editId,
+    formName,
+    formDescription,
+    isSubmitting,
+    deleteId,
+    isDeleting,
+    setIsOpen,
+    setFormName,
+    setFormDescription,
+    setDeleteId,
+    setSelectedDeptId,
+    handleOpenAdd,
+    handleOpenEdit,
+    handleSubmit,
+    handleDelete,
+  } = useDepartmentSettings()
 
   return (
     <>

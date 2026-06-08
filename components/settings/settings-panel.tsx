@@ -36,7 +36,7 @@ export function SettingsPanel() {
   const [workflowTemplates, setWorkflowTemplates] = useState<WorkflowTemplate[]>(INITIAL_WORKFLOW_TEMPLATES)
   const [notifications, setNotifications] = useState(INITIAL_NOTIFICATIONS)
 
-  const tabTriggerClass = "gap-2 rounded-lg py-2 px-3.5 text-sm font-medium text-slate-400 hover:text-slate-200 data-[state=active]:bg-violet-core/15 data-[state=active]:text-violet-glow data-[state=active]:border-violet-core/30 border border-transparent transition-all duration-300 shadow-[0_0_12px_rgba(139,92,246,0.08)] cursor-pointer"
+  const tabTriggerClass = "gap-2 rounded-lg py-2 px-3.5 text-sm font-medium text-slate-400 hover:text-slate-200 data-[state=active]:bg-violet-core/15 data-[state=active]:text-violet-glow data-[state=active]:border-violet-core/30 border border-transparent transition-all duration-300 shadow-[0_0_12px_rgba(139,92,246,0.08)] cursor-pointer shrink-0"
 
   return (
     <div className="space-y-6">
@@ -48,7 +48,7 @@ export function SettingsPanel() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="bg-midnight/60 border border-border/40 p-1.5 rounded-xl h-auto gap-1">
+        <TabsList className="bg-midnight/60 border border-border/40 p-1.5 rounded-xl h-auto gap-1 flex w-full overflow-x-auto scrollbar-none justify-start select-none">
           <TabsTrigger
             value="company"
             className={tabTriggerClass}

@@ -35,15 +35,15 @@ export function EmployeeTableFilters({
   onAddClick,
 }: EmployeeTableFiltersProps) {
   return (
-    <div className="flex items-center justify-between gap-4 mb-6">
-      <div className="flex items-center gap-3 flex-1">
-        <div className="relative flex-1 max-w-sm">
+    <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input
             placeholder="Search employees..."
             value={searchQuery}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-9 bg-midnight border-border rounded-xl text-sm"
+            className="pl-9 w-full bg-midnight border-border rounded-xl text-sm"
           />
         </div>
 
@@ -52,7 +52,7 @@ export function EmployeeTableFilters({
           value={departmentFilter || 'all'}
           onValueChange={(val) => onDepartmentChange(val === 'all' ? '' : val)}
         >
-          <SelectTrigger className="w-44 bg-midnight border-border rounded-xl text-sm text-slate-300">
+          <SelectTrigger className="w-full sm:w-44 bg-midnight border-border rounded-xl text-sm text-slate-300">
             <SelectValue placeholder="Department" />
           </SelectTrigger>
           <SelectContent>
@@ -70,7 +70,7 @@ export function EmployeeTableFilters({
           value={statusFilter || 'all'}
           onValueChange={(val) => onStatusChange(val === 'all' ? '' : val)}
         >
-          <SelectTrigger className="w-40 bg-midnight border-border rounded-xl text-sm text-slate-300">
+          <SelectTrigger className="w-full sm:w-40 bg-midnight border-border rounded-xl text-sm text-slate-300">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
@@ -84,14 +84,14 @@ export function EmployeeTableFilters({
         </Select>
       </div>
 
-      <div className="flex items-center gap-2">
-        <Button variant="outline" className="gap-2 rounded-xl h-10">
+      <div className="flex items-center gap-2 justify-end sm:justify-start">
+        <Button variant="outline" className="gap-2 rounded-xl h-10 flex-1 sm:flex-none justify-center">
           <Download className="w-4 h-4" />
           Export
         </Button>
         <Button
           onClick={onAddClick}
-          className="gap-2 bg-violet-core hover:bg-violet-deep rounded-xl h-10 font-semibold"
+          className="gap-2 bg-violet-core hover:bg-violet-deep rounded-xl h-10 font-semibold flex-1 sm:flex-none justify-center"
         >
           <Plus className="w-4 h-4" />
           Add Employee

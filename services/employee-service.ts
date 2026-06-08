@@ -1,11 +1,10 @@
 // services/employee-service.ts
 import { api } from '@/lib/api';
+import { cleanParams } from '@/lib/types';
+import type { DropdownItem } from '@/lib/types';
 import type { Employee } from '@/components/employees/employee-table';
 
-export interface DropdownItem {
-  id: number | string;
-  name: string;
-}
+export type { DropdownItem };
 
 export interface DropdownData {
   roles: DropdownItem[];
@@ -28,7 +27,6 @@ export interface DropdownResponse {
 export interface CreateEmployeePayload {
   username: string;
   email: string;
-  password?: string;
   full_name: string;
   phone_number: string;
   role: number;
@@ -58,6 +56,7 @@ export interface EmployeeListParams {
   search?: string;
   department?: number | string;
   status?: string;
+  [key: string]: string | number | boolean | undefined | null;
 }
 
 export interface EmployeeListResponse {
@@ -75,8 +74,8 @@ export const employeeService = {
   /**
    * Fetches dropdown metadata from the backend.
    */
-  async getDropdowns(): Promise<DropdownData> {
-    const response = await api.get<DropdownResponse>('/api/employee/dropdowns/');
+  async getDropdowns(signal?: AbortSignal): Promise<DropdownData> {
+    const response = await api.get<DropdownResponse>('/api/employee/dropdowns/', { signal });
     return response.results.data;
   },
 
@@ -84,19 +83,16 @@ export const employeeService = {
    * Fetches the employee list from the backend.
    * Bubbles up errors directly to the caller.
    */
-  async getEmployees(params: EmployeeListParams): Promise<{
+  async getEmployees(params: EmployeeListParams, signal?: AbortSignal): Promise<{
     data: Employee[];
     total_count: number;
     total_pages: number;
     current_page: number;
   }> {
-    const cleanParams: Record<string, string | number | boolean> = {}
-    Object.entries(params).forEach(([key, val]) => {
-      if (val !== undefined && val !== null) {
-        cleanParams[key] = val
-      }
-    })
-    const response = await api.get<EmployeeListResponse>('/api/employee/employees/', { params: cleanParams });
+    const response = await api.get<EmployeeListResponse>('/api/employee/employees/', { 
+      params: cleanParams(params),
+      signal,
+    });
     return {
       data: response.results?.data || [],
       total_count: response.results?.total_count || 0,
@@ -108,8 +104,8 @@ export const employeeService = {
   /**
    * Fetches a single employee detail from the backend.
    */
-  async getEmployee(id: number): Promise<Employee> {
-    const response = await api.get<{ results: { data: Employee } }>(`/api/employee/employees/${id}/`);
+  async getEmployee(id: number, signal?: AbortSignal): Promise<Employee> {
+    const response = await api.get<{ results: { data: Employee } }>(`/api/employee/employees/${id}/`, { signal });
     return response.results.data;
   },
 

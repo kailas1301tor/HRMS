@@ -67,39 +67,20 @@ export function BasicInfoStep({ isEditMode = false, dropdowns }: BasicInfoStepPr
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="emp-email" className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-            Email Address
-          </Label>
-          <Input
-            {...register('email')}
-            id="emp-email"
-            type="email"
-            placeholder="name@company.com"
-            className="bg-midnight/55 border-border rounded-xl text-sm"
-            required
-            autoComplete="off"
-          />
-          {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
-        </div>
-        {!isEditMode && (
-          <div className="space-y-2">
-            <Label htmlFor="emp-password" className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-              Password
-            </Label>
-            <Input
-              {...register('password')}
-              id="emp-password"
-              type="password"
-              placeholder="••••••••"
-              className="bg-midnight/55 border-border rounded-xl text-sm"
-              required={!isEditMode}
-              autoComplete="new-password"
-            />
-            {errors.password && <p className="text-xs text-destructive">{errors.password.message}</p>}
-          </div>
-        )}
+      <div className="space-y-2">
+        <Label htmlFor="emp-email" className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+          Email Address
+        </Label>
+        <Input
+          {...register('email')}
+          id="emp-email"
+          type="email"
+          placeholder="name@company.com"
+          className="bg-midnight/55 border-border rounded-xl text-sm"
+          required
+          autoComplete="off"
+        />
+        {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
       </div>
 
       <div className="grid grid-cols-2 gap-4">

@@ -33,7 +33,7 @@ export function RequestsList() {
   return (
     <div className="space-y-6">
       {/* Summary Cards */}
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {Object.entries(statusConfig).map(([key, config]) => {
           const count = INITIAL_REQUESTS.filter((r) => r.status === key).length
           return (
@@ -53,19 +53,19 @@ export function RequestsList() {
       </div>
 
       {/* Toolbar */}
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex items-center gap-3 flex-1">
-          <div className="relative flex-1 max-w-sm">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 flex-1">
+          <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Search requests..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9 bg-midnight border-border"
+              className="pl-9 w-full bg-midnight border-border"
             />
           </div>
           <Select value={statusFilter} onValueChange={setStatusFilter}>
-            <SelectTrigger className="w-40 bg-midnight border-border">
+            <SelectTrigger className="w-full sm:w-40 bg-midnight border-border">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
@@ -78,7 +78,7 @@ export function RequestsList() {
             </SelectContent>
           </Select>
           <Select value={typeFilter} onValueChange={setTypeFilter}>
-            <SelectTrigger className="w-40 bg-midnight border-border">
+            <SelectTrigger className="w-full sm:w-40 bg-midnight border-border">
               <SelectValue placeholder="Type" />
             </SelectTrigger>
             <SelectContent>

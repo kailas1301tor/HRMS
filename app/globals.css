@@ -72,6 +72,10 @@
   --sidebar-accent-foreground: #f1f5f9;
   --sidebar-border: #334155;
   --sidebar-ring: #7c3aed;
+
+  /* Shimmer base variables for dark theme */
+  --skeleton-base: rgba(255, 255, 255, 0.05);
+  --skeleton-highlight: rgba(255, 255, 255, 0.12);
 }
 
 .light {
@@ -113,6 +117,10 @@
   --slate-500: #64748b;
   --slate-700: #cbd5e1;
   --cloud: #0f172a;
+
+  /* Shimmer base variables for light theme */
+  --skeleton-base: rgba(0, 0, 0, 0.05);
+  --skeleton-highlight: rgba(0, 0, 0, 0.12);
 }
 
 @theme inline {
@@ -216,12 +224,12 @@
 .skeleton-shimmer {
   background: linear-gradient(
     90deg,
-    var(--carbon) 0%,
-    var(--slate-700) 50%,
-    var(--carbon) 100%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
+    var(--skeleton-base) 25%,
+    var(--skeleton-highlight) 50%,
+    var(--skeleton-base) 75%
+  ) !important;
+  background-size: 200% 100% !important;
+  animation: shimmer 1.5s infinite !important;
 }
 
 /* Focus ring for accessibility */

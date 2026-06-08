@@ -5,7 +5,6 @@ export const employeeSchema = z.object({
   id: z.string().optional(),
   username: z.string().min(1, 'Username is required').max(150).trim(),
   email: z.string().min(1, 'Email is required').trim().email('Invalid email address'),
-  password: z.string().optional(),
   full_name: z.string().min(1, 'Full name is required').max(100),
   phone_number: z.string().min(1, 'Phone number is required'),
   role: z.string().min(1, 'Role is required'),
@@ -27,23 +26,6 @@ export const employeeSchema = z.object({
   account_number: z.string().min(1, 'Account number is required'),
   ifsc: z.string().min(1, 'IFSC code is required'),
   branch: z.string().min(1, 'Branch is required'),
-}).superRefine((data, ctx) => {
-  // If id is not present (Create Mode), password is required and must be at least 6 characters
-  if (!data.id) {
-    if (!data.password || data.password.trim().length === 0) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Password is required',
-        path: ['password']
-      })
-    } else if (data.password.length < 6) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: 'Password must be at least 6 characters long',
-        path: ['password']
-      })
-    }
-  }
 })
 
 export type EmployeeInput = z.infer<typeof employeeSchema>

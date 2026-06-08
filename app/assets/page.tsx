@@ -1,6 +1,7 @@
 import { Suspense } from 'react'
 import { AppShell } from '@/components/layout/app-shell'
 import { AssetsTable } from '@/components/assets/assets-table'
+import { Skeleton } from '@/components/ui/skeleton'
 
 export default function AssetsPage() {
   return (
@@ -15,7 +16,7 @@ export default function AssetsPage() {
         </div>
 
         {/* Assets Table */}
-        <Suspense fallback={<div className="h-96 w-full rounded-2xl bg-carbon/50 skeleton-shimmer" />}>
+        <Suspense fallback={<Skeleton className="h-96 w-full rounded-2xl" />}>
           <AssetsTable />
         </Suspense>
       </div>

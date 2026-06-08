@@ -1,7 +1,6 @@
 // components/settings/branch-settings-card.tsx
 'use client'
 
-import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -27,94 +26,29 @@ import {
   AlertDialogAction,
 } from '@/components/ui/alert-dialog'
 import { Plus, Trash2, Edit3, Loader2, MapPin } from 'lucide-react'
-import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
-import { branchService, type Branch } from '@/services/branch-service'
+import { useBranchSettings } from './useBranchSettings'
 
 export function BranchSettingsCard() {
-  const [branches, setBranches] = useState<Branch[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-
-  // Add/Edit Dialog State
-  const [isOpen, setIsOpen] = useState(false)
-  const [editId, setEditId] = useState<number | null>(null)
-  const [formName, setFormName] = useState('')
-  const [formAddress, setFormAddress] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
-  // Delete Dialog State
-  const [deleteId, setDeleteId] = useState<number | null>(null)
-  const [isDeleting, setIsDeleting] = useState(false)
-
-  const loadBranches = async (): Promise<void> => {
-    setIsLoading(true)
-    try {
-      const data = await branchService.getBranches()
-      setBranches(data)
-    } catch {
-      toast.error('Failed to load branches')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  useEffect(() => {
-    loadBranches()
-  }, [])
-
-  const handleOpenAdd = (): void => {
-    setFormName('')
-    setFormAddress('')
-    setEditId(null)
-    setIsOpen(true)
-  }
-
-  const handleOpenEdit = (branch: Branch): void => {
-    setFormName(branch.name)
-    setFormAddress(branch.address)
-    setEditId(branch.id)
-    setIsOpen(true)
-  }
-
-  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
-    e.preventDefault()
-    const trimmedName = formName.trim()
-    if (!trimmedName) return
-
-    setIsSubmitting(true)
-    try {
-      if (editId !== null) {
-        await branchService.updateBranch(editId, trimmedName, formAddress.trim())
-        toast.success('Branch updated successfully')
-      } else {
-        await branchService.createBranch(trimmedName, formAddress.trim())
-        toast.success('Branch created successfully')
-      }
-      setIsOpen(false)
-      await loadBranches()
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to save branch'
-      toast.error(message)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const handleDelete = async (): Promise<void> => {
-    if (deleteId === null) return
-    setIsDeleting(true)
-    try {
-      await branchService.deleteBranch(deleteId)
-      toast.success('Branch deleted successfully')
-      setDeleteId(null)
-      await loadBranches()
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to delete branch'
-      toast.error(message)
-    } finally {
-      setIsDeleting(false)
-    }
-  }
+  const {
+    branches,
+    isLoading,
+    isOpen,
+    editId,
+    formName,
+    formAddress,
+    isSubmitting,
+    deleteId,
+    isDeleting,
+    setIsOpen,
+    setFormName,
+    setFormAddress,
+    setDeleteId,
+    handleOpenAdd,
+    handleOpenEdit,
+    handleSubmit,
+    handleDelete,
+  } = useBranchSettings()
 
   return (
     <>

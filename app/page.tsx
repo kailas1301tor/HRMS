@@ -1,3 +1,4 @@
+import { cookies } from 'next/headers'
 import { AppShell } from '@/components/layout/app-shell'
 import { KPIGrid } from '@/components/dashboard/kpi-cards'
 import { AttendanceHeatmap } from '@/components/dashboard/attendance-heatmap'
@@ -5,7 +6,14 @@ import { DocumentExpiryTimeline } from '@/components/dashboard/document-expiry'
 import { DepartmentDistribution } from '@/components/dashboard/department-distribution'
 import { PendingApprovals } from '@/components/dashboard/pending-approvals'
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const cookieStore = await cookies()
+  const username = cookieStore.get('auth_username')?.value || 'john'
+  const nameParts = username.split(/[._@]/).filter(Boolean)
+  const displayName = nameParts[0]
+    ? nameParts[0].charAt(0).toUpperCase() + nameParts[0].slice(1)
+    : 'John'
+
   return (
     <AppShell>
       <div className="space-y-8">
@@ -13,7 +21,7 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-2xl font-semibold text-cloud mb-1">Dashboard</h1>
           <p className="text-muted-foreground">
-            Welcome back, John. Here&apos;s what&apos;s happening with your team today.
+            Welcome back, {displayName}. Here&apos;s what&apos;s happening with your team today.
           </p>
         </div>
 

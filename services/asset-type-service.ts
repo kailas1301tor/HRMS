@@ -31,6 +31,7 @@ export const assetTypeService = {
       const response = await api.get<AssetTypeListResponse>('/api/master/asset-types/', { signal });
       return response.results?.data ?? fallback;
     } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') throw error;
       console.warn('🔴 Network error fetching asset types. Loading mock fallback.', error);
       return fallback;
     }

@@ -1,7 +1,6 @@
 // components/settings/hr-masters/shifts-master.tsx
 'use client'
 
-import { useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -18,9 +17,9 @@ import {
   AlertDialogAction,
 } from '@/components/ui/alert-dialog'
 import { Plus, Trash2, Edit3, Loader2 } from 'lucide-react'
-import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
-import { shiftService, type FrontendShift } from '@/services/shift-service'
+import { useShiftsMaster } from './useShiftsMaster'
+import type { FrontendShift } from '@/services/shift-service'
 
 interface ShiftsMasterProps {
   shifts: FrontendShift[]
@@ -29,89 +28,27 @@ interface ShiftsMasterProps {
 }
 
 export function ShiftsMaster({ shifts, isLoading, onRefresh }: ShiftsMasterProps) {
-  const [isShiftModalOpen, setIsShiftModalOpen] = useState(false)
-  const [editingShift, setEditingShift] = useState<FrontendShift | null>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
-  // Form fields
-  const [shiftName, setShiftName] = useState('')
-  const [shiftStartTime, setShiftStartTime] = useState('09:00')
-  const [shiftEndTime, setShiftEndTime] = useState('18:00')
-  const [shiftStandardHours, setShiftStandardHours] = useState('9')
-
-  // Delete state
-  const [deleteTarget, setDeleteTarget] = useState<FrontendShift | null>(null)
-  const [isDeleting, setIsDeleting] = useState(false)
-
-  const resetForm = (): void => {
-    setShiftName('')
-    setShiftStartTime('09:00')
-    setShiftEndTime('18:00')
-    setShiftStandardHours('9')
-    setEditingShift(null)
-  }
-
-  const handleOpenAdd = (): void => {
-    resetForm()
-    setIsShiftModalOpen(true)
-  }
-
-  const handleOpenEdit = (shift: FrontendShift): void => {
-    setShiftName(shift.name)
-    setShiftStartTime(shift.startTime)
-    setShiftEndTime(shift.endTime)
-    setShiftStandardHours(String(shift.standardWorkHours))
-    setEditingShift(shift)
-    setIsShiftModalOpen(true)
-  }
-
-  const handleSaveShift = async (e: React.FormEvent): Promise<void> => {
-    e.preventDefault()
-    if (!shiftName.trim()) return
-
-    setIsSubmitting(true)
-    try {
-      const payload = {
-        name: shiftName.trim().toUpperCase(),
-        start_time: `${shiftStartTime}:00`,
-        end_time: `${shiftEndTime}:00`,
-        standard_work_hours: shiftStandardHours,
-      }
-
-      if (editingShift) {
-        await shiftService.updateShift({ id: editingShift.id, ...payload })
-        toast.success('Shift updated successfully')
-      } else {
-        await shiftService.createShift(payload)
-        toast.success('Shift created successfully')
-      }
-      setIsShiftModalOpen(false)
-      resetForm()
-      await onRefresh()
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to save shift'
-      toast.error(message)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const handleDeleteShift = async (): Promise<void> => {
-    if (!deleteTarget) return
-
-    setIsDeleting(true)
-    try {
-      await shiftService.deleteShift(deleteTarget.id)
-      toast.success('Shift deleted successfully')
-      setDeleteTarget(null)
-      await onRefresh()
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to delete shift'
-      toast.error(message)
-    } finally {
-      setIsDeleting(false)
-    }
-  }
+  const {
+    isShiftModalOpen,
+    setIsShiftModalOpen,
+    editingShift,
+    isSubmitting,
+    shiftName,
+    setShiftName,
+    shiftStartTime,
+    setShiftStartTime,
+    shiftEndTime,
+    setShiftEndTime,
+    shiftStandardHours,
+    setShiftStandardHours,
+    deleteTarget,
+    setDeleteTarget,
+    isDeleting,
+    handleOpenAdd,
+    handleOpenEdit,
+    handleSaveShift,
+    handleDeleteShift,
+  } = useShiftsMaster({ onRefresh })
 
   return (
     <>

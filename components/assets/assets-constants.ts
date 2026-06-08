@@ -25,19 +25,45 @@ export function getAssetTypeConfig(typeName: string = '') {
 
 export function getStatusConfig(statusName: string = '') {
   const name = statusName.toLowerCase();
-  if (name.includes('assigned') || name.includes('in-service') || name.includes('in service')) {
-    return { label: statusName, className: 'bg-info-bg text-info-text' };
+  if (
+    name.includes('assigned') ||
+    name.includes('in-service') ||
+    name.includes('in service') ||
+    name.includes('in use') ||
+    name.includes('in-use')
+  ) {
+    return {
+      label: statusName,
+      className: 'bg-violet-50/80 text-violet-700 border border-violet-200/80 dark:bg-violet-950/40 dark:text-violet-300 dark:border-violet-800/60',
+      dotClassName: 'bg-violet-600 dark:bg-violet-400'
+    };
   }
   if (name.includes('repair') || name.includes('maintenance')) {
-    return { label: statusName, className: 'bg-warning-bg text-warning-text' };
+    return {
+      label: statusName,
+      className: 'bg-amber-50/80 text-amber-700 border border-amber-200/80 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800/60',
+      dotClassName: 'bg-amber-600 dark:bg-amber-400'
+    };
   }
-  if (name.includes('store') || name.includes('in-store')) {
-    return { label: statusName, className: 'bg-neutral-bg text-neutral-text' };
+  if (name.includes('store') || name.includes('in-store') || name.includes('ready') || name.includes('available')) {
+    return {
+      label: statusName,
+      className: 'bg-emerald-50/80 text-emerald-700 border border-emerald-200/80 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60',
+      dotClassName: 'bg-emerald-600 dark:bg-emerald-400'
+    };
   }
   if (name.includes('disposed') || name.includes('deleted')) {
-    return { label: statusName, className: 'bg-danger-bg text-danger-text' };
+    return {
+      label: statusName,
+      className: 'bg-rose-50/80 text-rose-700 border border-rose-200/80 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/60',
+      dotClassName: 'bg-rose-600 dark:bg-rose-400'
+    };
   }
-  return { label: statusName || 'Unknown', className: 'bg-slate-800 text-slate-400' };
+  return {
+    label: statusName || 'Unknown',
+    className: 'bg-slate-50/80 text-slate-700 border border-slate-200/80 dark:bg-slate-950/40 dark:text-slate-300 dark:border-slate-800/60',
+    dotClassName: 'bg-slate-600 dark:bg-slate-400'
+  };
 }
 
 export const INITIAL_ASSETS: BackendAsset[] = [
@@ -137,3 +163,18 @@ export const INITIAL_ASSETS: BackendAsset[] = [
     updated_at: '2023-06-01T00:00:00Z'
   }
 ]
+
+export const DISPOSAL_METHOD_FALLBACKS = [
+  { id: 'Sold', name: 'Sold' },
+  { id: 'Donated', name: 'Donated' },
+  { id: 'Scrapped', name: 'Scrapped' },
+  { id: 'Recycled', name: 'Recycled' },
+  { id: 'Other', name: 'Other' },
+] as const
+
+export const DOCUMENT_TYPE_FALLBACKS = [
+  { id: 1, name: 'Warranty Certificate' },
+  { id: 2, name: 'Invoice' },
+  { id: 3, name: 'Insurance Policy' },
+  { id: 4, name: 'Other' },
+] as const

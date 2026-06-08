@@ -1,8 +1,9 @@
 // components/assets/assets-table-row.tsx
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { Eye, Pencil, Trash2, MoreHorizontal, Building2, MapPin } from 'lucide-react'
+import { Eye, Pencil, Trash2, MoreHorizontal, Building2, MapPin, UserCheck, RefreshCw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
@@ -18,7 +19,6 @@ import { getAssetTypeConfig, getStatusConfig } from './assets-constants'
 interface AssetsTableRowProps {
   asset: BackendAsset
   index: number
-  onViewDetails: (id: number) => void
   onEdit: (asset: BackendAsset) => void
   onDelete: (id: number) => void
 }
@@ -26,10 +26,10 @@ interface AssetsTableRowProps {
 export function AssetsTableRow({
   asset,
   index,
-  onViewDetails,
   onEdit,
   onDelete,
 }: AssetsTableRowProps) {
+  const router = useRouter()
   const category = getAssetTypeConfig(asset.asset_type)
   const status = getStatusConfig(asset.status)
   const CategoryIcon = category.icon
@@ -40,13 +40,19 @@ export function AssetsTableRow({
     return isNaN(value) ? '0' : value.toLocaleString()
   }
 
+  const statusLower = asset.status?.toLowerCase() || ''
+  const isDisposed = statusLower.includes('dispose') || statusLower.includes('delete')
+  const isAssigned = statusLower.includes('assign') || statusLower.includes('in use') || statusLower.includes('in-use')
+  const inRepair = statusLower.includes('repair') || statusLower.includes('maintenance')
+
   return (
     <motion.tr
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ delay: index * 0.02 }}
-      className="border-b border-border/50 hover:bg-violet-core/5 transition-colors"
+      className="border-b border-border/50 hover:bg-violet-core/5 transition-colors cursor-pointer"
+      onClick={() => router.push(`/assets/${asset.id}`)}
     >
       <td className="px-4 py-3">
         <div className="flex items-center gap-3">
@@ -65,12 +71,12 @@ export function AssetsTableRow({
         <span className="text-sm text-slate-350">{asset.asset_type || 'Other'}</span>
       </td>
       <td className="px-4 py-3">
-        <span className="text-sm font-mono text-slate-350">{asset.serial_number || '—'}</span>
+        <span className="text-sm font-mono text-slate-355">{asset.serial_number || '—'}</span>
       </td>
       <td className="px-4 py-3">
         <div className="flex flex-col gap-1 items-start">
           {asset.department ? (
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-300 bg-slate-800 px-2 py-0.5 rounded flex items-center gap-1">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-violet-glow bg-violet-core/10 border border-violet-core/20 px-2.5 py-0.5 rounded-full flex items-center gap-1">
               <Building2 className="w-2.5 h-2.5 text-violet-glow" />
               {asset.department}
             </span>
@@ -86,7 +92,8 @@ export function AssetsTableRow({
         </div>
       </td>
       <td className="px-4 py-3">
-        <span className={cn('px-2.5 py-0.5 rounded-full text-[10px] font-semibold tracking-wide uppercase', status.className)}>
+        <span className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-semibold tracking-wide uppercase', status.className)}>
+          <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', status.dotClassName)} />
           {status.label}
         </span>
       </td>
@@ -95,18 +102,38 @@ export function AssetsTableRow({
           {formatCost(asset.purchase_cost)}
         </span>
       </td>
-      <td className="px-4 py-3">
+      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-slate-800">
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-accent">
               <MoreHorizontal className="w-4 h-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="bg-card border-border/80 text-cloud">
-            <DropdownMenuItem onClick={() => onViewDetails(asset.id)} className="cursor-pointer">
+            <DropdownMenuItem onClick={() => router.push(`/assets/${asset.id}`)} className="cursor-pointer">
               <Eye className="w-4 h-4 mr-2 text-slate-400" />
               View Details
             </DropdownMenuItem>
+            
+            {!isDisposed && (
+              <>
+                <DropdownMenuSeparator className="border-border/40" />
+                {!isAssigned && !inRepair && (
+                  <DropdownMenuItem onClick={() => router.push(`/assets/${asset.id}?tab=overview`)} className="cursor-pointer">
+                    <UserCheck className="w-4 h-4 mr-2 text-slate-400" />
+                    Assign Asset
+                  </DropdownMenuItem>
+                )}
+                {isAssigned && (
+                  <DropdownMenuItem onClick={() => router.push(`/assets/${asset.id}?tab=overview`)} className="cursor-pointer">
+                    <RefreshCw className="w-4 h-4 mr-2 text-slate-400" />
+                    Transfer Asset
+                  </DropdownMenuItem>
+                )}
+              </>
+            )}
+
+            <DropdownMenuSeparator className="border-border/40" />
             <DropdownMenuItem onClick={() => onEdit(asset)} className="cursor-pointer">
               <Pencil className="w-4 h-4 mr-2 text-slate-400" />
               Edit

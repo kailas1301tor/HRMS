@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
+import { Skeleton } from '@/components/ui/skeleton'
 
 // Generate attendance data for heatmap (12 weeks)
 function generateAttendanceData() {
@@ -49,10 +50,10 @@ export function AttendanceHeatmap() {
 
   if (!mounted) {
     return (
-      <div className="bg-card border border-border rounded-2xl p-6 min-h-[220px] animate-pulse">
+      <div className="bg-card border border-border rounded-2xl p-6 min-h-[220px]">
         <h3 className="text-lg font-semibold text-cloud mb-1">Attendance Overview</h3>
         <p className="text-sm text-muted-foreground mb-6">Last 12 weeks attendance distribution</p>
-        <div className="h-[120px] w-full bg-midnight/50 rounded-lg" />
+        <Skeleton className="h-[120px] w-full rounded-lg" />
       </div>
     )
   }

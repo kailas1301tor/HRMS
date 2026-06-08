@@ -49,6 +49,7 @@ export const vendorService = {
       const response = await api.get<VendorListResponse>('/api/master/vendors/', { signal });
       return (response.results?.data ?? []).map(mapBackendToFrontend);
     } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') throw error;
       console.warn('🔴 Network error fetching vendors. Loading mock fallback.', error);
       return fallback;
     }

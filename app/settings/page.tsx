@@ -2,11 +2,12 @@
 import { Suspense } from "react"
 import { AppShell } from "@/components/layout/app-shell"
 import { SettingsPanel } from "@/components/settings/settings-panel"
+import { Skeleton } from "@/components/ui/skeleton"
 
 export default function SettingsPage() {
   return (
     <AppShell>
-      <Suspense fallback={<div className="h-96 w-full rounded-2xl bg-midnight/50 animate-pulse" />}>
+      <Suspense fallback={<Skeleton className="h-96 w-full rounded-2xl" />}>
         <SettingsPanel />
       </Suspense>
     </AppShell>

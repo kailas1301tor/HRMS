@@ -1,7 +1,6 @@
+// components/layout/command-palette.tsx
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
-import { useRouter } from 'next/navigation'
 import { Command } from 'cmdk'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -20,6 +19,7 @@ import {
   Plus,
   ArrowRight,
 } from 'lucide-react'
+import { useCommandPalette } from './useCommandPalette'
 
 const pages = [
   { name: 'Dashboard', icon: LayoutDashboard, href: '/', keywords: ['home', 'overview', 'kpi'] },
@@ -54,29 +54,7 @@ interface CommandPaletteProps {
 }
 
 export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
-  const router = useRouter()
-  const [search, setSearch] = useState('')
-
-  useEffect(() => {
-    const down = (e: KeyboardEvent) => {
-      if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
-        e.preventDefault()
-        onOpenChange(!open)
-      }
-    }
-
-    document.addEventListener('keydown', down)
-    return () => document.removeEventListener('keydown', down)
-  }, [open, onOpenChange])
-
-  const handleSelect = useCallback(
-    (href: string) => {
-      onOpenChange(false)
-      setSearch('')
-      router.push(href)
-    },
-    [router, onOpenChange]
-  )
+  const { search, setSearch, handleSelect } = useCommandPalette({ open, onOpenChange })
 
   return (
     <AnimatePresence>

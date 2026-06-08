@@ -1,8 +1,8 @@
+// components/layout/sidebar.tsx
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -22,6 +22,7 @@ import {
   User,
   LogOut,
   Search,
+  Menu,
 } from 'lucide-react'
 import {
   DropdownMenu,
@@ -32,6 +33,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { useSidebar } from './useSidebar'
 
 const navItems = [
   { href: '/', icon: LayoutDashboard, label: 'Dashboard', section: 'Main' },
@@ -47,73 +49,83 @@ const navItems = [
 
 const sections = ['Main', 'Operations', 'System']
 
-export function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false)
-  const pathname = usePathname()
-  const router = useRouter()
+import type { UserProfile } from './app-shell'
 
-  const handleLogout = () => {
-    document.cookie = 'auth_session=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;'
-    router.refresh()
-    router.push('/login')
-  }
+interface SidebarProps {
+  collapsed: boolean
+  setCollapsed: (val: boolean) => void
+  mobileOpen: boolean
+  setMobileOpen: (val: boolean) => void
+  userProfile: UserProfile
+}
+
+export function Sidebar({ collapsed, setCollapsed, mobileOpen, setMobileOpen, userProfile }: SidebarProps) {
+  const { handleLogout, pathname } = useSidebar()
+  const [isMobile, setIsMobile] = useState(false)
+
+  // Track viewport size to dynamically shift layout animations
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobileMode = window.innerWidth < 768
+      setIsMobile(mobileMode)
+      if (!mobileMode) {
+        setMobileOpen(false)
+      }
+    }
+    checkMobile()
+    window.addEventListener('resize', checkMobile)
+    return () => window.removeEventListener('resize', checkMobile)
+  }, [setMobileOpen])
+
+  // Automatically close mobile sidebar on navigation transition
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [pathname, setMobileOpen])
 
   return (
     <motion.aside
       initial={false}
-      animate={{ width: collapsed ? 72 : 240 }}
-      transition={{ duration: 0.2, ease: 'easeInOut' }}
-      className="fixed left-0 top-0 h-screen bg-midnight border-r border-border flex flex-col z-50"
+      animate={
+        isMobile
+          ? { x: mobileOpen ? 0 : -240, width: 240 }
+          : { x: 0, width: collapsed ? 72 : 240 }
+      }
+      transition={{ duration: 0.25, ease: 'easeInOut' }}
+      className="fixed left-0 top-0 h-screen bg-midnight border-r border-border flex flex-col z-50 shadow-2xl md:shadow-none"
     >
-      {/* Workspace Switcher */}
+      {/* Sidebar Header / Logo */}
       <div className="p-4 border-b border-border">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-3 w-full hover:bg-carbon rounded-lg p-2 transition-colors">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-core to-violet-glow flex items-center justify-center flex-shrink-0">
-                <Building2 className="w-4 h-4 text-white" />
-              </div>
-              <AnimatePresence>
-                {!collapsed && (
-                  <motion.div
-                    initial={{ opacity: 0, width: 0 }}
-                    animate={{ opacity: 1, width: 'auto' }}
-                    exit={{ opacity: 0, width: 0 }}
-                    className="flex-1 text-left overflow-hidden"
-                  >
-                    <p className="text-sm font-medium text-cloud truncate">Acme Corp</p>
-                    <p className="text-xs text-muted-foreground truncate">Enterprise</p>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-56">
-            <DropdownMenuLabel>Switch Workspace</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <Building2 className="w-4 h-4 mr-2" />
-              Acme Corp
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Building2 className="w-4 h-4 mr-2" />
-              Tech Solutions LLC
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex items-center gap-3 w-full p-2">
+          <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-core to-violet-glow flex items-center justify-center flex-shrink-0">
+            <Building2 className="w-4 h-4 text-white" />
+          </div>
+          <AnimatePresence>
+            {(!collapsed || isMobile) && (
+              <motion.div
+                initial={{ opacity: 0, width: 0 }}
+                animate={{ opacity: 1, width: 'auto' }}
+                exit={{ opacity: 0, width: 0 }}
+                className="flex-1 text-left overflow-hidden"
+              >
+                <p className="text-sm font-semibold text-cloud truncate">HRMS Portal</p>
+                <p className="text-xs text-muted-foreground truncate">Management</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
 
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-4 px-3">
+      {/* Navigation Links */}
+      <nav className="flex-1 overflow-y-auto py-4 px-3 custom-scrollbar">
         {sections.map((section) => (
           <div key={section} className="mb-6">
             <AnimatePresence>
-              {!collapsed && (
+              {(!collapsed || isMobile) && (
                 <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="px-3 mb-2 text-[10px] font-medium uppercase tracking-wider text-slate-500"
+                  className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-wider text-slate-500"
                 >
                   {section}
                 </motion.p>
@@ -131,18 +143,18 @@ export function Sidebar() {
                       className={cn(
                         'flex items-center gap-3 h-10 px-3 rounded-lg transition-all duration-150',
                         isActive
-                          ? 'bg-gradient-to-r from-violet-core to-violet-deep text-white'
+                          ? 'bg-gradient-to-r from-violet-core to-violet-deep text-white font-medium shadow-md shadow-violet-core/10'
                           : 'text-slate-300 hover:bg-carbon hover:text-cloud'
                       )}
                     >
-                      <item.icon className={cn('w-5 h-5 flex-shrink-0', isActive && 'text-white')} />
+                      <item.icon className={cn('w-5 h-5 flex-shrink-0', isActive ? 'text-white' : 'text-slate-400')} />
                       <AnimatePresence>
-                        {!collapsed && (
+                        {(!collapsed || isMobile) && (
                           <motion.span
                             initial={{ opacity: 0, width: 0 }}
                             animate={{ opacity: 1, width: 'auto' }}
                             exit={{ opacity: 0, width: 0 }}
-                            className="text-sm font-medium truncate"
+                            className="text-sm truncate"
                           >
                             {item.label}
                           </motion.span>
@@ -156,48 +168,48 @@ export function Sidebar() {
         ))}
       </nav>
 
-      {/* User Section */}
+      {/* User Session profile */}
       <div className="p-4 border-t border-border">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-3 w-full hover:bg-carbon rounded-lg p-2 transition-colors">
+            <button className="flex items-center gap-3 w-full hover:bg-carbon rounded-lg p-2 transition-colors cursor-pointer">
               <Avatar className="w-8 h-8 flex-shrink-0">
                 <AvatarImage src="/placeholder-user.jpg" />
-                <AvatarFallback className="bg-gradient-to-br from-violet-core to-violet-glow text-white text-xs">
-                  JD
+                <AvatarFallback className="bg-gradient-to-br from-violet-core to-violet-glow text-white text-xs font-mono">
+                  {userProfile.initials}
                 </AvatarFallback>
               </Avatar>
               <AnimatePresence>
-                {!collapsed && (
+                {(!collapsed || isMobile) && (
                   <motion.div
                     initial={{ opacity: 0, width: 0 }}
                     animate={{ opacity: 1, width: 'auto' }}
                     exit={{ opacity: 0, width: 0 }}
                     className="flex-1 text-left overflow-hidden"
                   >
-                    <p className="text-sm font-medium text-cloud truncate">John Doe</p>
-                    <p className="text-xs text-muted-foreground truncate">HR Manager</p>
+                    <p className="text-sm font-medium text-cloud truncate">{userProfile.fullName}</p>
+                    <p className="text-xs text-muted-foreground truncate">{userProfile.roleName}</p>
                   </motion.div>
                 )}
               </AnimatePresence>
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="w-56">
+          <DropdownMenuContent align="start" className="w-56 bg-popover border border-border">
             <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <User className="w-4 h-4 mr-2" />
+            <DropdownMenuSeparator className="border-border/40" />
+            <DropdownMenuItem className="cursor-pointer">
+              <User className="w-4 h-4 mr-2 text-slate-400" />
               Profile
             </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Bell className="w-4 h-4 mr-2" />
+            <DropdownMenuItem className="cursor-pointer">
+              <Bell className="w-4 h-4 mr-2 text-slate-400" />
               Notifications
             </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Settings className="w-4 h-4 mr-2" />
+            <DropdownMenuItem className="cursor-pointer">
+              <Settings className="w-4 h-4 mr-2 text-slate-400" />
               Settings
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="border-border/40" />
             <DropdownMenuItem className="text-destructive cursor-pointer" onClick={handleLogout}>
               <LogOut className="w-4 h-4 mr-2" />
               Sign out
@@ -206,114 +218,109 @@ export function Sidebar() {
         </DropdownMenu>
       </div>
 
-      {/* Collapse Toggle */}
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        className="absolute -right-3 top-20 w-6 h-6 bg-carbon border border-border rounded-full flex items-center justify-center text-slate-300 hover:text-cloud hover:border-violet-core transition-colors"
-      >
-        {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-      </button>
+      {/* Collapse Toggle trigger (Desktop Only) */}
+      {!isMobile && (
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="absolute -right-3 top-20 w-6 h-6 bg-carbon border border-border rounded-full flex items-center justify-center text-slate-300 hover:text-cloud hover:border-violet-core transition-colors cursor-pointer"
+          aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          {collapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
+        </button>
+      )}
     </motion.aside>
   )
 }
 
 interface TopNavbarProps {
   onSearchOpen: () => void
+  onMenuClick: () => void
+  userProfile: UserProfile
 }
 
-export function TopNavbar({ onSearchOpen }: TopNavbarProps) {
-  const pathname = usePathname()
-  const router = useRouter()
-
-  const handleLogout = () => {
-    document.cookie = 'auth_session=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT;'
-    router.refresh()
-    router.push('/login')
-  }
-  
-  const getBreadcrumbs = () => {
-    const paths = pathname.split('/').filter(Boolean)
-    if (paths.length === 0) return [{ label: 'Dashboard', href: '/' }]
-    
-    return paths.map((path, index) => ({
-      label: path.charAt(0).toUpperCase() + path.slice(1),
-      href: '/' + paths.slice(0, index + 1).join('/'),
-    }))
-  }
-
-  const breadcrumbs = getBreadcrumbs()
+export function TopNavbar({ onSearchOpen, onMenuClick, userProfile }: TopNavbarProps) {
+  const { handleLogout, breadcrumbs } = useSidebar()
 
   return (
-    <header className="h-16 border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-40 flex items-center justify-between px-6">
-      {/* Breadcrumbs */}
-      <nav className="flex items-center gap-2 text-sm">
-        <Link href="/" className="text-muted-foreground hover:text-foreground transition-colors">
-          Home
-        </Link>
-        {breadcrumbs.map((crumb, index) => (
-          <div key={crumb.href} className="flex items-center gap-2">
-            <span className="text-muted-foreground">/</span>
-            <Link
-              href={crumb.href}
-              className={cn(
-                'transition-colors',
-                index === breadcrumbs.length - 1
-                  ? 'text-foreground font-medium'
-                  : 'text-muted-foreground hover:text-foreground'
-              )}
-            >
-              {crumb.label}
-            </Link>
-          </div>
-        ))}
-      </nav>
+    <header className="h-16 border-b border-border bg-background/80 backdrop-blur-sm sticky top-0 z-40 flex items-center justify-between px-4 sm:px-6">
+      {/* Drawer Toggle & Breadcrumbs */}
+      <div className="flex items-center gap-1.5">
+        <button
+          onClick={onMenuClick}
+          className="p-2 hover:bg-carbon rounded-lg text-slate-400 hover:text-cloud md:hidden transition-colors cursor-pointer"
+          aria-label="Open main menu"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+        <nav className="hidden xs:flex items-center gap-2 text-xs sm:text-sm font-medium">
+          <Link href="/" className="text-muted-foreground hover:text-foreground transition-colors">
+            Home
+          </Link>
+          {breadcrumbs.map((crumb, index) => (
+            <div key={crumb.href} className="flex items-center gap-2">
+              <span className="text-muted-foreground">/</span>
+              <Link
+                href={crumb.href}
+                className={cn(
+                  'transition-colors',
+                  index === breadcrumbs.length - 1
+                    ? 'text-foreground font-semibold'
+                    : 'text-muted-foreground hover:text-foreground'
+                )}
+              >
+                {crumb.label}
+              </Link>
+            </div>
+          ))}
+        </nav>
+      </div>
 
       {/* Search & Actions */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2.5 sm:gap-4">
         <button
           onClick={onSearchOpen}
-          className="flex items-center gap-2 h-9 px-4 bg-midnight border border-border rounded-full text-sm text-muted-foreground hover:text-foreground hover:border-violet-core transition-all"
+          className="flex items-center gap-2 h-9 px-3 sm:px-4 bg-midnight border border-border rounded-full text-xs sm:text-sm text-muted-foreground hover:text-foreground hover:border-violet-core transition-all cursor-pointer"
         >
-          <Search className="w-4 h-4" />
+          <Search className="w-4 h-4 text-slate-400" />
           <span className="hidden sm:inline">Search...</span>
-          <kbd className="hidden sm:inline-flex h-5 px-1.5 items-center gap-1 rounded bg-carbon text-[10px] font-medium text-muted-foreground">
+          <kbd className="hidden sm:inline-flex h-5 px-1.5 items-center gap-1 rounded bg-carbon text-[9px] font-medium text-muted-foreground">
             ⌘K
           </kbd>
         </button>
 
-        <button className="relative p-2 hover:bg-carbon rounded-lg transition-colors">
+        <button className="relative p-2 hover:bg-carbon rounded-lg transition-colors cursor-pointer" aria-label="Notifications">
           <Bell className="w-5 h-5 text-slate-300" />
-          <span className="absolute top-1 right-1 w-2 h-2 bg-violet-core rounded-full" />
+          <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-violet-core rounded-full" />
         </button>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 p-1 hover:bg-carbon rounded-lg transition-colors">
+            <button className="flex items-center gap-2 p-1 hover:bg-carbon rounded-lg transition-colors cursor-pointer">
               <Avatar className="w-8 h-8">
                 <AvatarImage src="/placeholder-user.jpg" />
-                <AvatarFallback className="bg-gradient-to-br from-violet-core to-violet-glow text-white text-xs">
-                  JD
+                <AvatarFallback className="bg-gradient-to-br from-violet-core to-violet-glow text-white text-xs font-mono">
+                  {userProfile.initials}
                 </AvatarFallback>
               </Avatar>
             </button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuContent align="end" className="w-56 bg-popover border border-border">
             <DropdownMenuLabel>
               <div className="flex flex-col">
-                <span className="font-medium">John Doe</span>
-                <span className="text-xs text-muted-foreground">john@acmecorp.com</span>
+                <span className="font-semibold text-cloud">{userProfile.fullName}</span>
+                <span className="text-xs text-muted-foreground">{userProfile.email}</span>
               </div>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <User className="w-4 h-4 mr-2" />
+            <DropdownMenuSeparator className="border-border/40" />
+            <DropdownMenuItem className="cursor-pointer">
+              <User className="w-4 h-4 mr-2 text-slate-400" />
               Profile
             </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Settings className="w-4 h-4 mr-2" />
+            <DropdownMenuItem className="cursor-pointer">
+              <Settings className="w-4 h-4 mr-2 text-slate-400" />
               Settings
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="border-border/40" />
             <DropdownMenuItem className="text-destructive cursor-pointer" onClick={handleLogout}>
               <LogOut className="w-4 h-4 mr-2" />
               Sign out

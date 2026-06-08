@@ -1,7 +1,6 @@
 // components/settings/designation-settings-card.tsx
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -28,151 +27,35 @@ import {
   AlertDialogAction,
 } from '@/components/ui/alert-dialog'
 import { Plus, Trash2, Edit3, Loader2, Briefcase } from 'lucide-react'
-import { toast } from 'sonner'
 import { Skeleton } from '@/components/ui/skeleton'
-import { departmentService, type Department } from '@/services/department-service'
-import { designationService, type Designation } from '@/services/designation-service'
-import { useRouter, usePathname, useSearchParams } from 'next/navigation'
+import { useDesignationSettings } from './useDesignationSettings'
 
 export function DesignationSettingsCard() {
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-
-  const selectedDeptId = searchParams.get('dept_id') || ''
-
-  const setSelectedDeptId = (id: string) => {
-    const params = new URLSearchParams(searchParams.toString())
-    if (id) {
-      params.set('dept_id', id)
-    } else {
-      params.delete('dept_id')
-    }
-    router.replace(`${pathname}?${params.toString()}`)
-  }
-
-  // Department data
-  const [departments, setDepartments] = useState<Department[]>([])
-  const [isDeptLoading, setIsDeptLoading] = useState(true)
-
-  // Designation data
-  const [designations, setDesignations] = useState<Designation[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-
-  // Add/Edit Dialog
-  const [isOpen, setIsOpen] = useState(false)
-  const [editId, setEditId] = useState<number | null>(null)
-  const [formName, setFormName] = useState('')
-  const [formDescription, setFormDescription] = useState('')
-  const [formDepartmentId, setFormDepartmentId] = useState<string>('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-
-  // Delete Dialog
-  const [deleteId, setDeleteId] = useState<number | null>(null)
-  const [isDeleting, setIsDeleting] = useState(false)
-
-  useEffect(() => {
-    const loadDepts = async (): Promise<void> => {
-      setIsDeptLoading(true)
-      try {
-        const data = await departmentService.getDepartments()
-        setDepartments(data)
-      } catch {
-        toast.error('Failed to load departments')
-      } finally {
-        setIsDeptLoading(false)
-      }
-    }
-    loadDepts()
-  }, [])
-
-  useEffect(() => {
-    if (!selectedDeptId && departments.length > 0) {
-      setSelectedDeptId(String(departments[0].id))
-    }
-  }, [selectedDeptId, departments])
-
-  const loadDesignations = useCallback(async (deptId: number): Promise<void> => {
-    setIsLoading(true)
-    try {
-      const data = await designationService.getDesignations(deptId)
-      setDesignations(data)
-    } catch {
-      toast.error('Failed to load designations')
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (selectedDeptId) {
-      loadDesignations(Number(selectedDeptId))
-    }
-  }, [selectedDeptId, loadDesignations])
-
-  const handleDeptChange = (value: string): void => {
-    setSelectedDeptId(value)
-    setDesignations([])
-  }
-
-  const handleOpenAdd = (): void => {
-    setFormName('')
-    setFormDescription('')
-    setFormDepartmentId(selectedDeptId)
-    setEditId(null)
-    setIsOpen(true)
-  }
-
-  const handleOpenEdit = (desig: Designation): void => {
-    setFormName(desig.name)
-    setFormDescription(desig.description)
-    setFormDepartmentId(String(desig.department))
-    setEditId(desig.id)
-    setIsOpen(true)
-  }
-
-  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
-    e.preventDefault()
-    if (!formName.trim() || !formDepartmentId) return
-
-    const deptId = Number(formDepartmentId)
-    setIsSubmitting(true)
-    try {
-      if (editId !== null) {
-        await designationService.updateDesignation(editId, deptId, formName.trim(), formDescription.trim())
-        toast.success('Designation updated successfully')
-      } else {
-        await designationService.createDesignation(deptId, formName.trim(), formDescription.trim())
-        toast.success('Designation created successfully')
-      }
-      setIsOpen(false)
-      // Refresh list for the currently viewed department
-      if (selectedDeptId) {
-        await loadDesignations(Number(selectedDeptId))
-      }
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to save designation'
-      toast.error(message)
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
-
-  const handleDelete = async (): Promise<void> => {
-    if (deleteId === null || !selectedDeptId) return
-    setIsDeleting(true)
-    try {
-      await designationService.deleteDesignation(deleteId)
-      toast.success('Designation deleted successfully')
-      setDeleteId(null)
-      await loadDesignations(Number(selectedDeptId))
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Failed to delete designation'
-      toast.error(message)
-    } finally {
-      setIsDeleting(false)
-    }
-  }
+  const {
+    selectedDeptId,
+    departments,
+    isDeptLoading,
+    designations,
+    isLoading,
+    isOpen,
+    editId,
+    formName,
+    formDescription,
+    formDepartmentId,
+    isSubmitting,
+    deleteId,
+    isDeleting,
+    setIsOpen,
+    setFormName,
+    setFormDescription,
+    setFormDepartmentId,
+    setDeleteId,
+    handleDeptChange,
+    handleOpenAdd,
+    handleOpenEdit,
+    handleSubmit,
+    handleDelete,
+  } = useDesignationSettings()
 
   return (
     <>
