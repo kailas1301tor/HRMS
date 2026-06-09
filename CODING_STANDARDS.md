@@ -2,6 +2,8 @@
 
 This document defines the architectural guidelines and frontend coding standards for the HRMS & Asset Management codebase. All developers must adhere to these rules to maintain a readable, scalable, and highly debuggable codebase.
 
+For Git branching, commit messages, PR workflow, and deployment rules, see **[GIT_STANDARDS.md](./GIT_STANDARDS.md)**.
+
 ---
 
 ## 1. Separation of Concerns (UI vs. Service Layers)
