@@ -1,4 +1,4 @@
-const BASE = 'https://hrms-backend-s9pn.onrender.com';
+const BASE = process.env.NEXT_PUBLIC_API_URL ?? 'https://roka-stage-backend.hroptim.com';
 
 async function getToken() {
   const res = await fetch(`${BASE}/api/auth/login/`, {

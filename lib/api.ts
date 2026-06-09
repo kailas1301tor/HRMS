@@ -1,6 +1,5 @@
 import { AUTH_COOKIE_NAMES, getClientCookie } from '@/lib/cookies'
-
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://hrms-backend-s9pn.onrender.com'
+import { API_BASE_URL } from '@/lib/env'
 
 let isRedirectingToLogin = false
 
@@ -38,7 +37,7 @@ async function request<T>(
   options: RequestOptions = {}
 ): Promise<T> {
   const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`
-  let url = `${BASE_URL}${cleanEndpoint}`
+  let url = `${API_BASE_URL}${cleanEndpoint}`
 
   if (options.params) {
     const searchParams = new URLSearchParams()

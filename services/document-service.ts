@@ -1,5 +1,6 @@
 // services/document-service.ts
 import { api } from '@/lib/api';
+import { buildApiUrl } from '@/lib/env';
 import { cleanParams } from '@/lib/types';
 import type { DropdownItem } from '@/lib/types';
 
@@ -52,6 +53,9 @@ export interface CompanyDocumentDropdowns {
 }
 
 // Fallback Mock Data for resilient local execution
+const MOCK_DOC_FILE_A = buildApiUrl('/media/employee_documents/GettyImages-2178111688_0a3KzTP.jpg')
+const MOCK_DOC_FILE_B = buildApiUrl('/media/employee_documents/GettyImages-2178111688_fgEiVIN.jpg')
+
 const FALLBACK_EMPLOYE_DOCS: EmployeeDocument[] = [
   {
     id: 1,
@@ -60,7 +64,7 @@ const FALLBACK_EMPLOYE_DOCS: EmployeeDocument[] = [
     document_number: '784-1990-1234567-1',
     expiry_date: '2024-01-15',
     status: 'Expired',
-    file_url: 'https://hrms-backend-s9pn.onrender.com/media/employee_documents/GettyImages-2178111688_0a3KzTP.jpg',
+    file_url: MOCK_DOC_FILE_A,
   },
   {
     id: 2,
@@ -69,7 +73,7 @@ const FALLBACK_EMPLOYE_DOCS: EmployeeDocument[] = [
     document_number: 'VIS-998822',
     expiry_date: '2026-06-25',
     status: 'Expiring',
-    file_url: 'https://hrms-backend-s9pn.onrender.com/media/employee_documents/GettyImages-2178111688_fgEiVIN.jpg',
+    file_url: MOCK_DOC_FILE_B,
   },
 ];
 
@@ -81,7 +85,7 @@ const FALLBACK_COMPANY_DOCS: CompanyDocument[] = [
     issue_date: '2023-01-01',
     expiry_date: '2026-12-31',
     status: 'Valid',
-    file_url: 'https://hrms-backend-s9pn.onrender.com/media/employee_documents/GettyImages-2178111688_0a3KzTP.jpg',
+    file_url: MOCK_DOC_FILE_A,
     document_number: 'TL-554433',
   },
   {
@@ -91,7 +95,7 @@ const FALLBACK_COMPANY_DOCS: CompanyDocument[] = [
     issue_date: '2022-05-10',
     expiry_date: '2024-05-09',
     status: 'Expired',
-    file_url: 'https://hrms-backend-s9pn.onrender.com/media/employee_documents/GettyImages-2178111688_fgEiVIN.jpg',
+    file_url: MOCK_DOC_FILE_B,
     document_number: 'EC-112233',
   },
 ];
