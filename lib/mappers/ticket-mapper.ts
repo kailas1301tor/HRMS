@@ -9,7 +9,18 @@ import type {
   TicketAttachment,
   TicketPriority,
   TicketRecord,
+  TicketStatus,
 } from '@/types/ticket'
+
+function normalizeTicketStatus(value: string | undefined): TicketStatus {
+  const normalized = (value ?? 'pending').trim().toLowerCase().replace(/\s+/g, '_')
+  if (normalized === 'approved') return 'approved'
+  if (normalized === 'rejected' || normalized === 'cancelled') return 'rejected'
+  if (normalized === 'resolved') return 'resolved'
+  if (normalized === 'closed') return 'closed'
+  if (normalized === 'in_progress') return 'in_progress'
+  return 'pending'
+}
 
 function normalizePriority(value: string | undefined): TicketPriority {
   const normalized = (value ?? 'Medium').trim()
@@ -58,6 +69,7 @@ export function mapBackendTicket(record: BackendTicket): TicketRecord {
     title: record.title?.trim() || 'Untitled',
     description: record.description?.trim() || '',
     priority: normalizePriority(record.priority),
+    status: normalizeTicketStatus(record.status),
     attachments,
     attachmentCount: attachments.length,
     createdAt: record.created_at ?? '',

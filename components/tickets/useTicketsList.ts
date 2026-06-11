@@ -3,9 +3,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ticketService } from '@/services/ticket-service'
-import type { TicketPriority, TicketRecord } from '@/types/ticket'
+import type { TicketPriority, TicketRecord, TicketStatus } from '@/types/ticket'
 
 export type TicketPriorityFilter = 'all' | TicketPriority
+export type TicketStatusFilter = 'all' | TicketStatus
 
 export interface UseTicketsListReturn {
   tickets: TicketRecord[]
@@ -17,6 +18,8 @@ export interface UseTicketsListReturn {
   setSearchQuery: (query: string) => void
   priorityFilter: TicketPriorityFilter
   setPriorityFilter: (filter: TicketPriorityFilter) => void
+  statusFilter: TicketStatusFilter
+  setStatusFilter: (filter: TicketStatusFilter) => void
   reload: () => void
 }
 
@@ -27,6 +30,7 @@ export function useTicketsList(): UseTicketsListReturn {
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [priorityFilter, setPriorityFilter] = useState<TicketPriorityFilter>('all')
+  const [statusFilter, setStatusFilter] = useState<TicketStatusFilter>('all')
   const [reloadToken, setReloadToken] = useState(0)
   const fetchIdRef = useRef(0)
 
@@ -67,13 +71,14 @@ export function useTicketsList(): UseTicketsListReturn {
     const query = searchQuery.trim().toLowerCase()
     return tickets.filter((ticket) => {
       const matchesPriority = priorityFilter === 'all' || ticket.priority === priorityFilter
+      const matchesStatus = statusFilter === 'all' || ticket.status === statusFilter
       const matchesSearch =
         !query ||
         ticket.title.toLowerCase().includes(query) ||
         ticket.description.toLowerCase().includes(query)
-      return matchesPriority && matchesSearch
+      return matchesPriority && matchesStatus && matchesSearch
     })
-  }, [tickets, searchQuery, priorityFilter])
+  }, [tickets, searchQuery, priorityFilter, statusFilter])
 
   return {
     tickets,
@@ -85,6 +90,8 @@ export function useTicketsList(): UseTicketsListReturn {
     setSearchQuery,
     priorityFilter,
     setPriorityFilter,
+    statusFilter,
+    setStatusFilter,
     reload,
   }
 }

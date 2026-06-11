@@ -16,10 +16,15 @@ import { uiCard, uiTableShell } from '@/lib/ui/design-system'
 import { cn } from '@/lib/utils'
 import { CreateTicketDialog } from './create-ticket-dialog'
 import { TicketDeleteDialog, TicketDetailDialog } from './ticket-detail-dialog'
-import { TICKET_PRIORITY_VARIANT } from './ticket-constants'
+import {
+  TICKET_PRIORITY_VARIANT,
+  TICKET_STATUS_FILTERS,
+  TICKET_STATUS_LABEL,
+  TICKET_STATUS_VARIANT,
+} from './ticket-constants'
 import { useTicketsList } from './useTicketsList'
 import { useTicketActions } from './useTicketActions'
-import type { TicketPriorityFilter } from './useTicketsList'
+import type { TicketPriorityFilter, TicketStatusFilter } from './useTicketsList'
 
 const PRIORITY_FILTERS = [
   { value: 'all', label: 'All' },
@@ -38,6 +43,8 @@ export function TicketsList() {
     setSearchQuery,
     priorityFilter,
     setPriorityFilter,
+    statusFilter,
+    setStatusFilter,
     reload,
   } = useTicketsList()
 
@@ -77,17 +84,22 @@ export function TicketsList() {
         }
       />
 
-      <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
-        <CommonListToolbar
-          searchQuery={searchQuery}
-          onSearchChange={setSearchQuery}
-          searchPlaceholder="Search tickets..."
-          className="w-full sm:max-w-md"
-        />
+      <CommonListToolbar
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        searchPlaceholder="Search tickets..."
+      />
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <CommonFilterChips
           options={[...PRIORITY_FILTERS]}
           value={priorityFilter}
           onChange={(value) => setPriorityFilter(value as TicketPriorityFilter)}
+        />
+        <CommonFilterChips
+          options={TICKET_STATUS_FILTERS}
+          value={statusFilter}
+          onChange={(value) => setStatusFilter(value as TicketStatusFilter)}
         />
       </div>
 
@@ -119,6 +131,9 @@ export function TicketsList() {
                     Priority
                   </th>
                   <th className="text-left px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-slate-500">
+                    Status
+                  </th>
+                  <th className="text-left px-4 py-3 text-[11px] font-medium uppercase tracking-wider text-slate-500">
                     Created
                   </th>
                 </tr>
@@ -144,6 +159,12 @@ export function TicketsList() {
                         variant={TICKET_PRIORITY_VARIANT[ticket.priority]}
                       />
                     </td>
+                    <td className="px-4 py-3">
+                      <CommonStatusBadge
+                        label={TICKET_STATUS_LABEL[ticket.status]}
+                        variant={TICKET_STATUS_VARIANT[ticket.status]}
+                      />
+                    </td>
                     <td className="px-4 py-3 text-sm text-slate-400">
                       {ticket.createdAt ? new Date(ticket.createdAt).toLocaleDateString() : '—'}
                     </td>
@@ -162,12 +183,18 @@ export function TicketsList() {
                 onClick={() => setDetailTarget(ticket)}
                 aria-label={`View ticket ${ticket.title}`}
               >
-                <div className="flex items-center justify-between gap-2 mb-2">
+                <div className="flex items-start justify-between gap-2 mb-2">
                   <p className="text-sm font-semibold text-cloud">{ticket.title}</p>
-                  <CommonStatusBadge
-                    label={ticket.priority}
-                    variant={TICKET_PRIORITY_VARIANT[ticket.priority]}
-                  />
+                  <div className="flex shrink-0 flex-wrap justify-end gap-1">
+                    <CommonStatusBadge
+                      label={ticket.priority}
+                      variant={TICKET_PRIORITY_VARIANT[ticket.priority]}
+                    />
+                    <CommonStatusBadge
+                      label={TICKET_STATUS_LABEL[ticket.status]}
+                      variant={TICKET_STATUS_VARIANT[ticket.status]}
+                    />
+                  </div>
                 </div>
                 <p className="text-xs text-slate-400 line-clamp-2">{ticket.description}</p>
               </button>

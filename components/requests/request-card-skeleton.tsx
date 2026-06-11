@@ -3,17 +3,11 @@
 
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
-import { uiSkeletonBlock, uiSquircleLg, uiSquircleMd, uiSquircleSm } from '@/lib/ui/design-system'
+import { uiCard, uiSkeletonBlock, uiSquircleMd, uiSquircleSm } from '@/lib/ui/design-system'
 
 export function RequestCardSkeleton() {
   return (
-    <div
-      className={cn(
-        'overflow-hidden border border-border/45 bg-card/92 p-4',
-        uiSquircleLg,
-        'shadow-[0_1px_2px_rgba(15,23,42,0.04),0_10px_28px_rgba(15,23,42,0.06)]'
-      )}
-    >
+    <div className={cn(uiCard, 'overflow-hidden p-5 border-l-2 border-l-border/60')}>
       <div className="flex flex-col gap-2.5">
         <div className="flex items-start justify-between gap-2">
           <div className="flex-1 space-y-1.5">

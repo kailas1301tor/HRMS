@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { CommonStatusBadge } from '@/components/common'
 import { Button } from '@/components/ui/button'
-import { uiSquircleLg, uiSquircleMd, uiSquircleSm } from '@/lib/ui/design-system'
+import { uiCardInteractive, uiSquircleMd, uiSquircleSm } from '@/lib/ui/design-system'
 import type { Request } from './requests-constants'
 import { typeConfig, statusConfig } from './requests-constants'
 
@@ -42,17 +42,12 @@ export function RequestCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.03, duration: 0.28, ease: [0.25, 0.1, 0.25, 1] }}
       className={cn(
-        'group relative flex flex-col overflow-hidden',
-        uiSquircleLg,
-        'border border-border/45 bg-card/92 backdrop-blur-xl',
-        'shadow-[0_1px_2px_rgba(15,23,42,0.04),0_10px_28px_rgba(15,23,42,0.06)]',
-        'dark:shadow-[0_1px_1px_rgba(255,255,255,0.04),0_12px_32px_rgba(0,0,0,0.35)]',
-        'transition-[box-shadow,border-color,transform] duration-300 ease-out',
-        'hover:-translate-y-0.5',
-        type.hoverBorder
+        uiCardInteractive,
+        'group relative flex flex-col overflow-hidden p-5 border-l-2',
+        status.borderColor,
       )}
     >
-      <div className="flex flex-col gap-2.5 p-4">
+      <div className="flex flex-col gap-2.5">
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1 space-y-1">
             <div className="flex items-center gap-1.5">

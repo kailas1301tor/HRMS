@@ -53,16 +53,19 @@ export const statusConfig = {
   pending: {
     label: 'Pending',
     className: 'bg-amber-500/15 text-amber-300 border border-amber-500/20',
+    borderColor: 'border-l-amber-400',
     apiValue: 'Pending',
   },
   approved: {
     label: 'Approved',
     className: 'bg-lime-400/15 text-lime-300 border border-lime-400/20',
+    borderColor: 'border-l-lime-400',
     apiValue: 'Approved',
   },
   rejected: {
     label: 'Rejected',
     className: 'bg-red-500/15 text-red-300 border border-red-500/20',
+    borderColor: 'border-l-red-500',
     apiValue: 'Rejected',
   },
 } as const

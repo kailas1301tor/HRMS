@@ -2,6 +2,14 @@
 
 export type TicketPriority = 'High' | 'Medium' | 'Low'
 
+export type TicketStatus =
+  | 'pending'
+  | 'in_progress'
+  | 'approved'
+  | 'resolved'
+  | 'closed'
+  | 'rejected'
+
 export interface BackendTicketAttachment {
   id?: number
   file?: string
@@ -14,6 +22,7 @@ export interface BackendTicket {
   title?: string
   description?: string
   priority?: string
+  status?: string
   attachments?: BackendTicketAttachment[] | string[]
   created_at?: string
   updated_at?: string
@@ -31,6 +40,7 @@ export interface TicketRecord {
   title: string
   description: string
   priority: TicketPriority
+  status: TicketStatus
   attachments: TicketAttachment[]
   attachmentCount: number
   createdAt: string
