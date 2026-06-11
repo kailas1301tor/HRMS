@@ -21,6 +21,7 @@ import { LeaveRequestForm } from './forms/leave-request-form'
 import { SalaryAdvanceRequestForm } from './forms/salary-advance-request-form'
 import { LoanRequestForm } from './forms/loan-request-form'
 import { DocumentRequestForm } from './forms/document-request-form'
+import { usePermissions } from '@/components/auth/permissions-provider'
 
 const REQUEST_TYPE_OPTIONS: CreateRequestType[] = [
   'leave',
@@ -39,6 +40,8 @@ function parseTypeParam(value: string | null): CreateRequestType {
 export function CreateRequestPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const { isLoading: isPermissionsLoading, canManage } = usePermissions()
+  const canManageRequests = canManage('requests')
   const typeParam = parseTypeParam(searchParams.get('type'))
 
   const {
@@ -49,11 +52,14 @@ export function CreateRequestPage() {
     employeeError,
     canSubmit,
     leaveTypes,
-    holidayDates,
+    holidayEvents,
+    existingLeaveDates,
     sessionChoices,
     documentTypeChoices,
     isLoadingMetadata,
     hasMetadataError,
+    isCalendarLoading,
+    hasCalendarError,
     reloadMetadata,
     isSubmitting,
     handleCalculateLeaveDays,
@@ -102,6 +108,15 @@ export function CreateRequestPage() {
 
   const isFormLoading = isLoadingMetadata || isEmployeeLoading
 
+  if (!isPermissionsLoading && !canManageRequests) {
+    return (
+      <CommonErrorState
+        title="Access denied"
+        message="You do not have permission to create requests."
+      />
+    )
+  }
+
   return (
     <div className="space-y-6">
       <Link
@@ -129,7 +144,7 @@ export function CreateRequestPage() {
       {hasMetadataError && !isFormLoading ? (
         <CommonErrorState
           title="Failed to load form data"
-          message="Request choices, leave types, or holidays could not be loaded."
+          message="Request choices or leave types could not be loaded."
           onRetry={reloadMetadata}
         />
       ) : isFormLoading ? (
@@ -155,15 +170,26 @@ export function CreateRequestPage() {
           )}
 
           {selectedType === 'leave' && (
-            <LeaveRequestForm
-              leaveTypes={leaveTypes}
-              holidayDates={holidayDates}
-              sessionChoices={sessionChoices}
-              isSubmitting={isSubmitting || !canSubmit}
-              onCalculate={handleCalculateLeaveDays}
-              onSubmit={handleSubmitLeave}
-              onCancel={handleCancel}
-            />
+            <>
+              {hasCalendarError && (
+                <CommonErrorBanner
+                  message="Leave calendar could not be loaded. You can still submit a request."
+                  onRetry={reloadMetadata}
+                  className="mb-4"
+                />
+              )}
+              <LeaveRequestForm
+                leaveTypes={leaveTypes}
+                holidayEvents={holidayEvents}
+                existingLeaveDates={existingLeaveDates}
+                isCalendarLoading={isCalendarLoading}
+                sessionChoices={sessionChoices}
+                isSubmitting={isSubmitting || !canSubmit}
+                onCalculate={handleCalculateLeaveDays}
+                onSubmit={handleSubmitLeave}
+                onCancel={handleCancel}
+              />
+            </>
           )}
 
           {selectedType !== 'leave' && (

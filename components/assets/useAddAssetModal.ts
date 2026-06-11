@@ -18,6 +18,8 @@ import { invalidateAssetDropdowns } from './useAssetDropdowns'
 
 export interface UseAddAssetModalReturn {
   isSubmitting: boolean
+  isFormLoading: boolean
+  hasFormLoadError: boolean
   form: UseFormReturn<AssetInput>
   onSubmit: (data: AssetInput) => Promise<void>
 }
@@ -28,25 +30,33 @@ export function useAddAssetModal(
   onSuccess: () => void,
   editAsset: Asset | null | undefined,
   dropdowns: AssetDropdowns | null,
-  departments: Department[]
+  departments: Department[],
+  metadataLoading: boolean,
+  metadataError: boolean
 ): UseAddAssetModalReturn {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  const isFormLoading = Boolean(open && editAsset && metadataLoading)
+  const hasFormLoadError = Boolean(open && editAsset && metadataError && !metadataLoading)
+
   const form = useForm<AssetInput>({
     resolver: zodResolver(assetSchema),
-    mode: 'onBlur',
+    mode: 'onSubmit',
   })
 
   const { reset } = form
 
   useEffect(() => {
     if (!open) return
-    if (editAsset && dropdowns) {
+
+    if (editAsset) {
+      if (metadataLoading || !dropdowns) return
       reset(assetToFormValues(editAsset, dropdowns, departments))
-    } else {
-      reset(defaultAssetFormValues())
+      return
     }
-  }, [open, editAsset, dropdowns, departments, reset])
+
+    reset(defaultAssetFormValues())
+  }, [open, editAsset, dropdowns, departments, metadataLoading, reset])
 
   const onSubmit = async (data: AssetInput) => {
     setIsSubmitting(true)
@@ -73,6 +83,8 @@ export function useAddAssetModal(
 
   return {
     isSubmitting,
+    isFormLoading,
+    hasFormLoadError,
     form,
     onSubmit,
   }

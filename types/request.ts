@@ -131,6 +131,21 @@ export interface RequestChoices {
   document_request_type_choices: RequestChoiceItem[]
 }
 
+export interface LeaveCalendarEvent {
+  date: string
+  label: string
+}
+
+export interface LeaveCalendarViewModel {
+  holidayEvents: LeaveCalendarEvent[]
+  existingLeaveDates: Date[]
+}
+
+export const EMPTY_LEAVE_CALENDAR: LeaveCalendarViewModel = {
+  holidayEvents: [],
+  existingLeaveDates: [],
+}
+
 export interface LeaveCalculatePayload {
   from_date: string
   to_date: string

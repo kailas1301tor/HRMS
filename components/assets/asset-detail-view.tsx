@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 import { type BackendAsset, type AssetDropdowns } from '@/types/asset'
 import { useAssetDetail } from './useAssetDetail'
+import { usePermissions } from '@/components/auth/permissions-provider'
 import { AddAssetModal } from './add-asset-modal'
 
 // Tabs
@@ -39,10 +40,15 @@ interface AssetDetailViewProps {
 
 export function AssetDetailView({ assetId }: AssetDetailViewProps) {
   const router = useRouter()
+  const { canManage } = usePermissions()
+  const canManageAssets = canManage('assets')
   const {
     asset,
     dropdowns,
     departments,
+    dropdownsLoading,
+    dropdownsError,
+    reloadDropdowns,
     isLoading,
     error,
     isAssignOpen,
@@ -98,7 +104,7 @@ export function AssetDetailView({ assetId }: AssetDetailViewProps) {
           <ArrowLeft className="h-4 w-4" /> Back to Assets
         </Button>
 
-        {!isDisposed && (
+        {!isDisposed && canManageAssets && (
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto sm:self-auto">
             {!isAssigned && !inRepair && (
               <Button
@@ -259,6 +265,9 @@ export function AssetDetailView({ assetId }: AssetDetailViewProps) {
         editAsset={asset}
         dropdowns={dropdowns}
         departments={departments}
+        metadataLoading={dropdownsLoading}
+        metadataError={dropdownsError}
+        onReloadMetadata={reloadDropdowns}
       />
       <AssignAssetDialog
         open={isAssignOpen}

@@ -1,6 +1,6 @@
 // services/pay-rule-service.ts
 import { api } from '@/lib/api'
-import type { DropdownItem } from '@/lib/types'
+import type { StringDropdownItem } from '@/lib/types'
 import type {
   CreatePayRulePayload,
   PayRule,
@@ -29,25 +29,28 @@ interface PayRuleChoicesResponse {
   }
 }
 
-function normalizeChoiceList(raw: unknown): DropdownItem[] {
+function normalizeChoiceList(raw: unknown): StringDropdownItem[] {
   if (!Array.isArray(raw)) return []
 
-  return raw.map((entry, index) => {
-    if (typeof entry === 'string') {
-      return { id: index + 1, name: entry }
-    }
-    if (entry && typeof entry === 'object') {
-      const record = entry as Record<string, unknown>
-      const name = String(record.name ?? record.label ?? record.value ?? '')
-      const id = Number(record.id ?? index + 1)
-      return { id: Number.isFinite(id) ? id : index + 1, name }
-    }
-    return { id: index + 1, name: String(entry) }
-  }).filter((item) => item.name.length > 0)
+  return raw
+    .map((entry) => {
+      if (typeof entry === 'string') {
+        return { id: entry, name: entry }
+      }
+      if (entry && typeof entry === 'object') {
+        const record = entry as Record<string, unknown>
+        const apiValue = String(record.value ?? record.id ?? record.name ?? record.label ?? '')
+        const label = String(record.label ?? record.name ?? record.value ?? apiValue)
+        return { id: apiValue, name: label }
+      }
+      const fallback = String(entry)
+      return { id: fallback, name: fallback }
+    })
+    .filter((item) => item.id.length > 0)
 }
 
 function mapChoicesResponse(data: Record<string, unknown>): PayRuleChoices {
-  const pick = (...keys: string[]): DropdownItem[] => {
+  const pick = (...keys: string[]): StringDropdownItem[] => {
     for (const key of keys) {
       if (key in data) return normalizeChoiceList(data[key])
     }

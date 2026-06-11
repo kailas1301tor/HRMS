@@ -18,11 +18,23 @@ export const maintenanceSchema = z.object({
   estimated_cost: z.coerce.number().nonnegative({ message: 'Estimated cost must be a positive number' }),
 });
 
-export const returnAssetSchema = z.object({
-  return_to_department: z.coerce.number().positive({ message: 'Please select a department' }),
+const returnAssetSharedFields = {
   return_date: z.string().min(1, { message: 'Return date is required' }),
   service_cost: z.coerce.number().nonnegative({ message: 'Service cost must be a non-negative number' }).optional(),
-});
+}
+
+export const returnAssetSchema = z.discriminatedUnion('return_target', [
+  z.object({
+    return_target: z.literal('department'),
+    return_to_department: z.coerce.number().positive({ message: 'Please select a department' }),
+    ...returnAssetSharedFields,
+  }),
+  z.object({
+    return_target: z.literal('employee'),
+    return_to_employee: z.coerce.number().positive({ message: 'Please select an employee' }),
+    ...returnAssetSharedFields,
+  }),
+])
 
 export const disposeAssetSchema = z.object({
   disposal_date: z.string().min(1, { message: 'Disposal date is required' }),

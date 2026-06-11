@@ -23,12 +23,15 @@ import { getApiErrorMessage } from '@/lib/helpers/api-error-message'
 import type { LeaveType } from '@/services/leave-type-service'
 import type { RequestChoiceItem } from '@/services/employee-request-service'
 import { leaveRequestSchema, type LeaveRequestInput } from '@/validations/request.schema'
+import type { LeaveCalendarEvent } from '@/types/request'
 import { LeaveCalendarPanel } from './leave-calendar-panel'
 import { LeaveDateRangeFields } from './leave-date-range-fields'
 
 interface LeaveRequestFormProps {
   leaveTypes: LeaveType[]
-  holidayDates?: Date[]
+  holidayEvents?: LeaveCalendarEvent[]
+  existingLeaveDates?: Date[]
+  isCalendarLoading?: boolean
   sessionChoices: RequestChoiceItem[]
   isSubmitting: boolean
   onCalculate: (
@@ -44,21 +47,26 @@ function isInvalidSessionCombo(
   fromDate: string,
   toDate: string,
   startSession: string,
-  endSession: string
+  endSession: string,
+  sessionChoices: RequestChoiceItem[]
 ): boolean {
-  return Boolean(
-    fromDate &&
-      toDate &&
-      fromDate === toDate &&
-      startSession &&
-      endSession &&
-      startSession === endSession
-  )
+  if (!fromDate || !toDate || fromDate !== toDate || !startSession || !endSession) {
+    return false
+  }
+
+  const startIndex = sessionChoices.findIndex((choice) => choice.id === startSession)
+  const endIndex = sessionChoices.findIndex((choice) => choice.id === endSession)
+
+  if (startIndex === -1 || endIndex === -1) return false
+
+  return endIndex < startIndex
 }
 
 export function LeaveRequestForm({
   leaveTypes,
-  holidayDates = [],
+  holidayEvents = [],
+  existingLeaveDates = [],
+  isCalendarLoading = false,
   sessionChoices,
   isSubmitting,
   onCalculate,
@@ -108,9 +116,9 @@ export function LeaveRequestForm({
       return
     }
 
-    if (isInvalidSessionCombo(fromDate, toDate, startSession, endSession)) {
+    if (isInvalidSessionCombo(fromDate, toDate, startSession, endSession, sessionChoices)) {
       setCalculateState('invalid')
-      setCalculateMessage('Start and end session cannot be the same on a single day.')
+      setCalculateMessage('End session must be on or after start session on the same day.')
       setValue('number_of_days', 0)
       return
     }
@@ -145,7 +153,7 @@ export function LeaveRequestForm({
       setCalculateMessage(getApiErrorMessage(error, 'Failed to calculate leave days'))
       setValue('number_of_days', 0)
     }
-  }, [fromDate, toDate, startSession, endSession, onCalculate, setValue])
+  }, [fromDate, toDate, startSession, endSession, sessionChoices, onCalculate, setValue])
 
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current)
@@ -195,13 +203,24 @@ export function LeaveRequestForm({
     <form onSubmit={handleSubmit(onSubmit)} className="lg:h-full">
       <div className="grid grid-cols-1 lg:grid-cols-5 lg:items-stretch gap-5 lg:gap-6 lg:min-h-[520px]">
         <div className="lg:col-span-3 flex flex-col h-full min-h-0">
-          <LeaveCalendarPanel
-            fromDate={fromDate}
-            toDate={toDate}
-            onRangeChange={handleRangeChange}
-            holidayDates={holidayDates}
-            className="h-full"
-          />
+          {isCalendarLoading ? (
+            <div
+              className={cn(uiCard, 'flex flex-1 min-h-[320px] items-center justify-center text-sm text-muted-foreground')}
+              role="status"
+              aria-label="Loading leave calendar"
+            >
+              Loading calendar…
+            </div>
+          ) : (
+            <LeaveCalendarPanel
+              fromDate={fromDate}
+              toDate={toDate}
+              onRangeChange={handleRangeChange}
+              holidayEvents={holidayEvents}
+              existingLeaveDates={existingLeaveDates}
+              className="h-full"
+            />
+          )}
         </div>
 
         <div

@@ -85,7 +85,7 @@ export function ShiftLateDeductionSection({
                   Name
                 </Label>
                 <Input
-                  value={policy.name}
+                  value={policy.name ?? ''}
                   onChange={(e) => onPolicyChange(index, 'name', e.target.value)}
                   placeholder="Tier 1 Time"
                   className={uiInput}
@@ -99,7 +99,7 @@ export function ShiftLateDeductionSection({
                 </Label>
                 <Input
                   type="time"
-                  value={policy.time}
+                  value={policy.time ?? '09:00'}
                   onChange={(e) => onPolicyChange(index, 'time', e.target.value)}
                   className={uiInput}
                   required
@@ -132,7 +132,7 @@ export function ShiftLateDeductionSection({
                   Value
                 </Label>
                 <Input
-                  value={policy.value}
+                  value={policy.value ?? ''}
                   onChange={(e) => onPolicyChange(index, 'value', e.target.value)}
                   placeholder="100.00"
                   className={uiInput}

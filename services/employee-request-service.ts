@@ -2,6 +2,7 @@
 import { api } from '@/lib/api'
 import { cleanParams } from '@/lib/types'
 import type { ApiListResponse, ApiSingleResponse } from '@/lib/types'
+import { mapLeaveCalendarFromApi } from '@/lib/mappers/leave-calendar-mapper'
 import type {
   CreateDocumentPayload,
   CreateLeaveRequestPayload,
@@ -9,6 +10,7 @@ import type {
   CreateSalaryAdvancePayload,
   DocumentRequestRecord,
   LeaveCalculatePayload,
+  LeaveCalendarViewModel,
   LeaveRequestRecord,
   LoanRequestRecord,
   PaginatedRequestResult,
@@ -26,6 +28,7 @@ export type {
   CreateSalaryAdvancePayload,
   DocumentRequestRecord,
   LeaveCalculatePayload,
+  LeaveCalendarViewModel,
   LeaveRequestRecord,
   LoanRequestRecord,
   RequestActionType,
@@ -146,6 +149,14 @@ export const employeeRequestService = {
         document_request_type_choices: [],
       }
     )
+  },
+
+  async getLeaveCalendar(employeeId: number, signal?: AbortSignal): Promise<LeaveCalendarViewModel> {
+    const response = await api.get<ApiSingleResponse<unknown>>('/api/employee/leave-calendar/', {
+      params: { employee_id: employeeId },
+      signal,
+    })
+    return mapLeaveCalendarFromApi(response)
   },
 
   async approveRequest(

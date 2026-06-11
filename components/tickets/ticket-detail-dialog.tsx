@@ -17,7 +17,12 @@ import {
 import { uiInput, uiSelect } from '@/lib/ui/design-system'
 import { TicketAttachmentsField } from './ticket-attachments-field'
 import { TicketExistingAttachments } from './ticket-existing-attachments'
-import { TICKET_PRIORITIES, TICKET_PRIORITY_VARIANT } from './ticket-constants'
+import {
+  TICKET_PRIORITIES,
+  TICKET_PRIORITY_VARIANT,
+  TICKET_STATUS_LABEL,
+  TICKET_STATUS_VARIANT,
+} from './ticket-constants'
 import type { TicketPriority, TicketRecord, UpdateTicketInput } from '@/types/ticket'
 
 const labelClass = 'text-xs font-semibold uppercase tracking-wider text-muted-foreground'
@@ -76,10 +81,16 @@ export function TicketDetailDialog({
       onSubmit={handleSubmit}
     >
       <div className="space-y-4">
-        <CommonStatusBadge
-          label={ticket.priority}
-          variant={TICKET_PRIORITY_VARIANT[ticket.priority]}
-        />
+        <div className="flex flex-wrap items-center gap-2">
+          <CommonStatusBadge
+            label={ticket.priority}
+            variant={TICKET_PRIORITY_VARIANT[ticket.priority]}
+          />
+          <CommonStatusBadge
+            label={TICKET_STATUS_LABEL[ticket.status]}
+            variant={TICKET_STATUS_VARIANT[ticket.status]}
+          />
+        </div>
 
         <div className="space-y-2">
           <Label htmlFor="detail-priority" className={labelClass}>

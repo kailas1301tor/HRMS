@@ -20,6 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { CommonErrorBanner } from '@/components/common'
 import type { Asset, AssetDropdowns } from '@/types/asset'
 import type { Department } from '@/services/department-service'
 import { useAddAssetModal } from './useAddAssetModal'
@@ -31,6 +32,9 @@ interface AddAssetModalProps {
   editAsset?: Asset | null
   dropdowns: AssetDropdowns | null
   departments: Department[]
+  metadataLoading?: boolean
+  metadataError?: boolean
+  onReloadMetadata?: () => void
 }
 
 export function AddAssetModal({
@@ -40,14 +44,19 @@ export function AddAssetModal({
   editAsset,
   dropdowns,
   departments,
+  metadataLoading = false,
+  metadataError = false,
+  onReloadMetadata,
 }: AddAssetModalProps) {
-  const { isSubmitting, form, onSubmit } = useAddAssetModal(
+  const { isSubmitting, isFormLoading, hasFormLoadError, form, onSubmit } = useAddAssetModal(
     open,
     onOpenChange,
     onSuccess,
     editAsset,
     dropdowns,
-    departments
+    departments,
+    metadataLoading,
+    metadataError
   )
 
   const {
@@ -66,7 +75,26 @@ export function AddAssetModal({
           </DialogTitle>
         </DialogHeader>
 
+        {isFormLoading ? (
+          <div className="flex items-center justify-center gap-2 py-16 text-sm text-slate-400">
+            <Loader2 className="w-5 h-5 animate-spin text-violet-glow" />
+            Loading asset details…
+          </div>
+        ) : hasFormLoadError ? (
+          <div className="py-8">
+            <CommonErrorBanner
+              message="Form options could not be loaded. Please try again."
+              onRetry={onReloadMetadata ? () => void onReloadMetadata() : undefined}
+            />
+          </div>
+        ) : (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 py-4">
+          {!editAsset && metadataError && (
+            <CommonErrorBanner
+              message="Form options could not be loaded. Some dropdowns may be empty."
+              onRetry={onReloadMetadata ? () => void onReloadMetadata() : undefined}
+            />
+          )}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1">
               <Label className="text-xs text-slate-300">Asset Name *</Label>
@@ -282,6 +310,7 @@ export function AddAssetModal({
             </Button>
           </DialogFooter>
         </form>
+        )}
       </DialogContent>
     </Dialog>
   )

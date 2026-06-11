@@ -1,5 +1,5 @@
 // types/settings.ts
-import type { DropdownItem } from '@/lib/types'
+import type { DropdownItem, StringDropdownItem } from '@/lib/types'
 
 export type SettingsTab = 'company' | 'roles' | 'hr' | 'payroll' | 'assets' | 'system'
 
@@ -41,10 +41,10 @@ export interface PayRule {
 }
 
 export interface PayRuleChoices {
-  category_choices: DropdownItem[]
-  trigger_basis_choices: DropdownItem[]
-  calculate_type_choices: DropdownItem[]
-  base_choices: DropdownItem[]
+  category_choices: StringDropdownItem[]
+  trigger_basis_choices: StringDropdownItem[]
+  calculate_type_choices: StringDropdownItem[]
+  base_choices: StringDropdownItem[]
 }
 
 export interface CreatePayRulePayload {
@@ -76,14 +76,26 @@ export interface Holiday {
   updated_at?: string
 }
 
-export interface WorkingDay {
+export interface BackendWorkingDayConfig {
   id: number
-  name: string
-  is_working_day: boolean
+  start_week_day: string
+  end_week_day: string
   is_active?: boolean
   deleted?: boolean
   created_at?: string
   updated_at?: string
+}
+
+export interface WorkingDay {
+  id: number
+  key: string
+  name: string
+  is_working_day: boolean
+}
+
+export interface WorkingDaysViewModel {
+  configId: number | null
+  items: WorkingDay[]
 }
 
 export interface CreateHolidayPayload {
@@ -97,10 +109,13 @@ export interface UpdateHolidayPayload {
   date: string
 }
 
-export interface UpdateWorkingDayPayload {
+export interface CreateWorkingDayConfigPayload {
+  start_week_day: string
+  end_week_day: string
+}
+
+export interface UpdateWorkingDayConfigPayload extends CreateWorkingDayConfigPayload {
   id: number
-  name: string
-  is_working_day: boolean
 }
 
 export interface Branch {

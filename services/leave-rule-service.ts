@@ -42,4 +42,8 @@ export const leaveRuleService = {
     )
     return response.results.data
   },
+
+  async deleteLeaveRule(id: number): Promise<void> {
+    await api.delete('/api/master/leave-rules/', { params: { id } })
+  },
 }

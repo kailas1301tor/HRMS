@@ -14,6 +14,9 @@ import { useAssetDropdowns } from './useAssetDropdowns'
 export interface UseAssetDetailReturn {
   asset: Asset | null
   dropdowns: AssetDropdowns | null
+  dropdownsLoading: boolean
+  dropdownsError: boolean
+  reloadDropdowns: () => Promise<void>
   isLoading: boolean
   error: string | null
   isAssignOpen: boolean
@@ -46,7 +49,13 @@ export function useAssetDetail(assetId: number): UseAssetDetailReturn {
   const searchParams = useSearchParams()
   const [isPending, startTransition] = useTransition()
 
-  const { dropdowns, departments } = useAssetDropdowns()
+  const {
+    dropdowns,
+    departments,
+    isLoading: dropdownsLoading,
+    hasError: dropdownsError,
+    reload: reloadDropdowns,
+  } = useAssetDropdowns()
 
   const [asset, setAsset] = useState<Asset | null>(null)
   const [isLoading, setIsLoading] = useState(true)
@@ -127,6 +136,9 @@ export function useAssetDetail(assetId: number): UseAssetDetailReturn {
     asset,
     dropdowns,
     departments,
+    dropdownsLoading,
+    dropdownsError,
+    reloadDropdowns,
     isLoading,
     error,
     isAssignOpen,

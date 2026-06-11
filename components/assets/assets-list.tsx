@@ -21,14 +21,19 @@ import { AssetCard } from './asset-card'
 import { AssetCardSkeleton } from './asset-card-skeleton'
 import { AddAssetModal } from './add-asset-modal'
 import { DisposeAssetDialog } from './dispose-asset-dialog'
+import { AssignAssetDialog } from './assign-asset-dialog'
 import { useAssetsTable } from './useAssetsTable'
+import { usePermissions } from '@/components/auth/permissions-provider'
 
 export function AssetsList() {
+  const { canManage } = usePermissions()
+  const canManageAssets = canManage('assets')
   const {
     assetsList,
     pagination,
     dropdowns,
     departments,
+    dropdownsLoading,
     dropdownsError,
     reloadDropdowns,
     isTableLoading,
@@ -36,6 +41,7 @@ export function AssetsList() {
     selectedAsset,
     isAddOpen,
     disposeTargetId,
+    assignTargetId,
     localSearch,
     setLocalSearch,
     statusFilter,
@@ -44,6 +50,7 @@ export function AssetsList() {
     setSelectedAsset,
     setIsAddOpen,
     setDisposeTargetId,
+    setAssignTargetId,
     handleRetry,
     updateQueryParams,
     handleClearFilters,
@@ -89,6 +96,7 @@ export function AssetsList() {
         onAddAsset={handleAddAsset}
         onExport={handleExport}
         isExporting={isExporting}
+        canManage={canManageAssets}
       />
 
       {hasError ? (
@@ -110,6 +118,7 @@ export function AssetsList() {
             pagination={pagination}
             onEdit={() => {}}
             onDispose={() => {}}
+            onAssign={() => {}}
             onPageChange={() => {}}
           />
         </>
@@ -119,6 +128,7 @@ export function AssetsList() {
           title="No assets found"
           description="Try updating your search query or filters, or add a new asset to get started."
           actions={
+            canManageAssets ? (
             <>
               <PrimaryButton onClick={handleAddAsset} className="text-xs min-h-11">
                 Add Asset
@@ -132,6 +142,16 @@ export function AssetsList() {
                 Clear Filters
               </Button>
             </>
+            ) : (
+              <Button
+                type="button"
+                variant="outline"
+                onClick={handleClearFilters}
+                className={cn(uiOutlineBtn, 'text-xs min-h-11')}
+              >
+                Clear Filters
+              </Button>
+            )
           }
         />
       ) : (
@@ -147,6 +167,8 @@ export function AssetsList() {
                   setIsAddOpen(true)
                 }}
                 onDelete={(id) => setDisposeTargetId(id)}
+                onAssign={(a) => setAssignTargetId(a.id)}
+                canManage={canManageAssets}
               />
             ))}
           </CommonMobileCardGrid>
@@ -172,7 +194,9 @@ export function AssetsList() {
               setIsAddOpen(true)
             }}
             onDispose={(id) => setDisposeTargetId(id)}
+            onAssign={(a) => setAssignTargetId(a.id)}
             onPageChange={(page) => updateQueryParams({ page: String(page) })}
+            canManage={canManageAssets}
           />
         </>
       )}
@@ -187,6 +211,9 @@ export function AssetsList() {
         editAsset={selectedAsset}
         dropdowns={dropdowns}
         departments={departments}
+        metadataLoading={dropdownsLoading}
+        metadataError={dropdownsError}
+        onReloadMetadata={reloadDropdowns}
       />
 
       {disposeTargetId !== null && (
@@ -197,6 +224,18 @@ export function AssetsList() {
           dropdowns={dropdowns}
           onSuccess={() => {
             setDisposeTargetId(null)
+            handleRetry()
+          }}
+        />
+      )}
+
+      {assignTargetId !== null && (
+        <AssignAssetDialog
+          open={assignTargetId !== null}
+          onOpenChange={(open) => !open && setAssignTargetId(null)}
+          assetId={assignTargetId}
+          onSuccess={() => {
+            setAssignTargetId(null)
             handleRetry()
           }}
         />

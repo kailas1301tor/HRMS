@@ -9,6 +9,7 @@ import { toast } from 'sonner'
 import { invalidateAssetDropdowns } from '@/components/assets/useAssetDropdowns'
 import { invalidateEmployeeDropdowns } from '@/components/employees/useEmployeeDropdowns'
 import { loadMasterList } from '@/lib/helpers/load-master-list'
+import { invalidateSettingsDepartments } from './invalidate-settings-departments'
 
 export interface UseDepartmentSettingsReturn {
   selectedDeptId: string
@@ -119,6 +120,7 @@ export function useDepartmentSettings(): UseDepartmentSettingsReturn {
       setIsOpen(false)
       invalidateEmployeeDropdowns()
       invalidateAssetDropdowns()
+      invalidateSettingsDepartments()
       await reload()
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to save department'
@@ -140,6 +142,7 @@ export function useDepartmentSettings(): UseDepartmentSettingsReturn {
       setDeleteId(null)
       invalidateEmployeeDropdowns()
       invalidateAssetDropdowns()
+      invalidateSettingsDepartments()
       await reload()
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Failed to delete department'

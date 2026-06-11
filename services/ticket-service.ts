@@ -9,8 +9,12 @@ import type {
   UpdateTicketInput,
 } from '@/types/ticket'
 
-function buildTicketFormData(input: CreateTicketInput | UpdateTicketInput): FormData {
+function buildTicketFormData(
+  input: CreateTicketInput | UpdateTicketInput,
+  id?: number,
+): FormData {
   const formData = new FormData()
+  if (id !== undefined) formData.append('id', String(id))
   if (input.title !== undefined) formData.append('title', input.title)
   if (input.description !== undefined) formData.append('description', input.description)
   if (input.priority !== undefined) formData.append('priority', input.priority)
@@ -44,9 +48,9 @@ export const ticketService = {
   },
 
   async updateTicket(id: number, input: UpdateTicketInput): Promise<TicketRecord> {
-    const response = await api.patch<ApiSingleResponse<BackendTicket>>(
-      `/api/tickets/${id}/`,
-      buildTicketFormData(input),
+    const response = await api.put<ApiSingleResponse<BackendTicket>>(
+      '/api/tickets/',
+      buildTicketFormData(input, id),
     )
     const data = response.results?.data
     if (!data) throw new Error('Failed to update ticket')
@@ -54,6 +58,6 @@ export const ticketService = {
   },
 
   async deleteTicket(id: number): Promise<void> {
-    await api.delete(`/api/tickets/${id}/`)
+    await api.delete('/api/tickets/', { params: { id } })
   },
 }
