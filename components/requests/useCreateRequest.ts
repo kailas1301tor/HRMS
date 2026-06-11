@@ -6,11 +6,10 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { employeeRequestService } from '@/services/employee-request-service'
 import { leaveTypeService, type LeaveType } from '@/services/leave-type-service'
-import { holidayService } from '@/services/holiday-service'
-import { holidaysToDates } from '@/lib/mappers/leave-calendar-mapper'
 import type { RequestChoiceItem } from '@/services/employee-request-service'
 import { useCurrentEmployee } from '@/hooks/use-current-employee'
 import { getApiErrorMessage } from '@/lib/helpers/api-error-message'
+import { EMPTY_LEAVE_CALENDAR, type LeaveCalendarViewModel } from '@/types/request'
 import type {
   LeaveRequestInput,
   SalaryAdvanceRequestInput,
@@ -33,9 +32,11 @@ export function useCreateRequest({ defaultType }: UseCreateRequestOptions) {
   const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([])
   const [sessionChoices, setSessionChoices] = useState<RequestChoiceItem[]>([])
   const [documentTypeChoices, setDocumentTypeChoices] = useState<RequestChoiceItem[]>([])
-  const [holidayDates, setHolidayDates] = useState<Date[]>([])
+  const [leaveCalendar, setLeaveCalendar] = useState<LeaveCalendarViewModel>(EMPTY_LEAVE_CALENDAR)
   const [isLoadingMetadata, setIsLoadingMetadata] = useState(true)
   const [hasMetadataError, setHasMetadataError] = useState(false)
+  const [isCalendarLoading, setIsCalendarLoading] = useState(false)
+  const [hasCalendarError, setHasCalendarError] = useState(false)
   const [metadataReloadToken, setMetadataReloadToken] = useState(0)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -48,6 +49,7 @@ export function useCreateRequest({ defaultType }: UseCreateRequestOptions) {
   }, [])
 
   const metadataFetchIdRef = useRef(0)
+  const calendarFetchIdRef = useRef(0)
 
   useEffect(() => {
     const controller = new AbortController()
@@ -57,16 +59,14 @@ export function useCreateRequest({ defaultType }: UseCreateRequestOptions) {
       setIsLoadingMetadata(true)
       setHasMetadataError(false)
       try {
-        const [choices, types, holidays] = await Promise.all([
+        const [choices, types] = await Promise.all([
           employeeRequestService.getRequestChoices(controller.signal),
           leaveTypeService.getLeaveTypes(controller.signal),
-          holidayService.getHolidays(controller.signal),
         ])
         if (controller.signal.aborted || fetchId !== metadataFetchIdRef.current) return
         setSessionChoices(choices.session_choices)
         setDocumentTypeChoices(choices.document_request_type_choices)
         setLeaveTypes(types)
-        setHolidayDates(holidaysToDates(holidays))
       } catch (error: unknown) {
         if (error instanceof Error && error.name === 'AbortError') return
         if (fetchId !== metadataFetchIdRef.current) return
@@ -74,7 +74,6 @@ export function useCreateRequest({ defaultType }: UseCreateRequestOptions) {
         setSessionChoices([])
         setDocumentTypeChoices([])
         setLeaveTypes([])
-        setHolidayDates([])
         toast.error('Failed to load form data')
       } finally {
         if (fetchId === metadataFetchIdRef.current) {
@@ -86,6 +85,41 @@ export function useCreateRequest({ defaultType }: UseCreateRequestOptions) {
     void loadMetadata()
     return () => controller.abort()
   }, [metadataReloadToken])
+
+  useEffect(() => {
+    const employeeId = employee?.id
+    if (!employeeId) {
+      setLeaveCalendar(EMPTY_LEAVE_CALENDAR)
+      setIsCalendarLoading(false)
+      setHasCalendarError(false)
+      return
+    }
+
+    const controller = new AbortController()
+    const fetchId = ++calendarFetchIdRef.current
+
+    const loadCalendar = async (): Promise<void> => {
+      setIsCalendarLoading(true)
+      setHasCalendarError(false)
+      try {
+        const calendar = await employeeRequestService.getLeaveCalendar(employeeId, controller.signal)
+        if (controller.signal.aborted || fetchId !== calendarFetchIdRef.current) return
+        setLeaveCalendar(calendar)
+      } catch (error: unknown) {
+        if (error instanceof Error && error.name === 'AbortError') return
+        if (fetchId !== calendarFetchIdRef.current) return
+        setHasCalendarError(true)
+        setLeaveCalendar(EMPTY_LEAVE_CALENDAR)
+      } finally {
+        if (fetchId === calendarFetchIdRef.current) {
+          setIsCalendarLoading(false)
+        }
+      }
+    }
+
+    void loadCalendar()
+    return () => controller.abort()
+  }, [employee?.id, metadataReloadToken])
 
   const handleSuccess = useCallback((): void => {
     router.push('/requests?status=pending')
@@ -217,11 +251,14 @@ export function useCreateRequest({ defaultType }: UseCreateRequestOptions) {
     employeeError,
     canSubmit,
     leaveTypes,
-    holidayDates,
+    holidayEvents: leaveCalendar.holidayEvents,
+    existingLeaveDates: leaveCalendar.existingLeaveDates,
     sessionChoices,
     documentTypeChoices,
     isLoadingMetadata,
     hasMetadataError,
+    isCalendarLoading,
+    hasCalendarError,
     reloadMetadata,
     isSubmitting,
     handleCalculateLeaveDays,

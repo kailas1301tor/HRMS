@@ -5,6 +5,11 @@ export function isAssetDisposed(status: string | null | undefined): boolean {
   return normalized.includes('dispose') || normalized.includes('delete')
 }
 
+export function isAssetInRepair(status: string | null | undefined): boolean {
+  const normalized = status?.toLowerCase() ?? ''
+  return normalized.includes('repair') || normalized.includes('maintenance')
+}
+
 export function isAssetInService(status: string | null | undefined): boolean {
   const normalized = status?.toLowerCase() ?? ''
   return (

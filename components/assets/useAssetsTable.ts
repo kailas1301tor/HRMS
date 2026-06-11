@@ -15,6 +15,7 @@ export interface UseAssetsTableReturn {
   pagination: { totalCount: number; totalPages: number; currentPage: number }
   dropdowns: ReturnType<typeof useAssetDropdowns>['dropdowns']
   departments: ReturnType<typeof useAssetDropdowns>['departments']
+  dropdownsLoading: boolean
   dropdownsError: boolean
   reloadDropdowns: () => Promise<void>
   isTableLoading: boolean
@@ -22,6 +23,7 @@ export interface UseAssetsTableReturn {
   selectedAsset: Asset | null
   isAddOpen: boolean
   disposeTargetId: number | null
+  assignTargetId: number | null
   searchQuery: string
   localSearch: string
   setLocalSearch: (query: string) => void
@@ -31,6 +33,7 @@ export interface UseAssetsTableReturn {
   setSelectedAsset: (asset: Asset | null) => void
   setIsAddOpen: (open: boolean) => void
   setDisposeTargetId: (id: number | null) => void
+  setAssignTargetId: (id: number | null) => void
   fetchAssets: (signal?: AbortSignal) => Promise<void>
   handleRetry: () => void
   updateQueryParams: (updates: Record<string, string | null>) => void
@@ -55,6 +58,7 @@ export function useAssetsTable(): UseAssetsTableReturn {
   const {
     dropdowns,
     departments,
+    isLoading: dropdownsLoading,
     hasError: dropdownsError,
     reload: reloadDropdowns,
   } = useAssetDropdowns()
@@ -70,6 +74,7 @@ export function useAssetsTable(): UseAssetsTableReturn {
   const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null)
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [disposeTargetId, setDisposeTargetId] = useState<number | null>(null)
+  const [assignTargetId, setAssignTargetId] = useState<number | null>(null)
 
   const refreshList = useCallback(() => {
     setReloadToken((prev) => prev + 1)
@@ -146,6 +151,7 @@ export function useAssetsTable(): UseAssetsTableReturn {
     pagination,
     dropdowns,
     departments,
+    dropdownsLoading,
     dropdownsError,
     reloadDropdowns,
     isTableLoading,
@@ -153,6 +159,7 @@ export function useAssetsTable(): UseAssetsTableReturn {
     selectedAsset,
     isAddOpen,
     disposeTargetId,
+    assignTargetId,
     searchQuery,
     localSearch,
     setLocalSearch,
@@ -162,6 +169,7 @@ export function useAssetsTable(): UseAssetsTableReturn {
     setSelectedAsset,
     setIsAddOpen,
     setDisposeTargetId,
+    setAssignTargetId,
     fetchAssets,
     handleRetry,
     updateQueryParams,

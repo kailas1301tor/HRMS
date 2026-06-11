@@ -1,6 +1,8 @@
 // services/asset-service.ts
 import { api } from '@/lib/api';
 import { parseContentDispositionFilename } from '@/lib/helpers/download-blob';
+import { mapAssetFromApi } from '@/lib/mappers/asset-mapper';
+import { mapAssetDocumentFromApi } from '@/lib/helpers/asset-document';
 import { cleanParams } from '@/lib/types';
 import type {
   AssetDropdowns,
@@ -101,8 +103,9 @@ export const assetService = {
       params: cleanParams(params),
       signal,
     })
+    const rows = response.results?.data ?? []
     return {
-      data: response.results?.data ?? [],
+      data: rows.map((row) => mapAssetFromApi(row as unknown as Record<string, unknown>)),
       total_count: response.results?.total_count ?? 0,
       total_pages: response.results?.total_pages ?? 1,
       current_page: response.results?.current_page ?? 1,
@@ -111,17 +114,17 @@ export const assetService = {
 
   async getAssetById(id: number, signal?: AbortSignal): Promise<BackendAsset> {
     const response = await api.get<SingleAssetResponse>(`/api/asset/assets/${id}/`, { signal });
-    return response.results.data;
+    return mapAssetFromApi(response.results.data as unknown as Record<string, unknown>);
   },
 
   async createAsset(payload: CreateAssetPayload): Promise<BackendAsset> {
     const response = await api.post<SingleAssetResponse>('/api/asset/assets/', payload as unknown as Record<string, unknown>);
-    return response.results.data;
+    return mapAssetFromApi(response.results.data as unknown as Record<string, unknown>);
   },
 
   async updateAsset(payload: CreateAssetPayload & { id: number }): Promise<BackendAsset> {
     const response = await api.put<SingleAssetResponse>('/api/asset/assets/', payload as unknown as Record<string, unknown>);
-    return response.results.data;
+    return mapAssetFromApi(response.results.data as unknown as Record<string, unknown>);
   },
 
   async deleteAsset(id: number): Promise<void> {
@@ -167,12 +170,15 @@ export const assetService = {
       params: { asset_id: assetId },
       signal,
     })
-    return response.results?.data ?? []
+    const items = response.results?.data ?? []
+    return items.map((item) =>
+      mapAssetDocumentFromApi(item as unknown as Record<string, unknown>)
+    )
   },
 
   async uploadAssetDocument(formData: FormData): Promise<AssetDocument> {
     const response = await api.post<SingleDocumentResponse>('/api/asset/assets/documents/', formData);
-    return response.results.data;
+    return mapAssetDocumentFromApi(response.results.data as unknown as Record<string, unknown>);
   },
 
   async deleteAssetDocument(docId: number): Promise<void> {

@@ -2,10 +2,11 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { Eye, Pencil, Trash2, MoreHorizontal, Building2, MapPin, UserCheck, RefreshCw } from 'lucide-react'
+import { Eye, Pencil, Trash2, MoreHorizontal, UserCheck, RefreshCw } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { CommonStatusBadge } from '@/components/common'
 import { Button } from '@/components/ui/button'
+import { uiOutlineBtn } from '@/lib/ui/design-system'
 import { getAssetStatusBadgeVariant } from './assets-constants'
 import {
   DropdownMenu,
@@ -15,19 +16,22 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import type { BackendAsset } from '@/types/asset'
-import { isAssetDisposed, isAssetInService } from '@/lib/helpers/asset-status'
+import { isAssetDisposed, isAssetInRepair, isAssetInService } from '@/lib/helpers/asset-status'
 import { getAssetTypeConfig, getStatusConfig } from './assets-constants'
+import { AssetAssignmentCell } from './asset-assignment-cell'
 
 interface AssetsTableRowProps {
   asset: BackendAsset
   onEdit: (asset: BackendAsset) => void
   onDelete: (id: number) => void
+  onAssign: (asset: BackendAsset) => void
 }
 
 export function AssetsTableRow({
   asset,
   onEdit,
   onDelete,
+  onAssign,
 }: AssetsTableRowProps) {
   const router = useRouter()
   const category = getAssetTypeConfig(asset.asset_type)
@@ -40,10 +44,11 @@ export function AssetsTableRow({
     return isNaN(value) ? '0' : value.toLocaleString()
   }
 
-  const statusLower = asset.status?.toLowerCase() || ''
   const isDisposed = isAssetDisposed(asset.status)
   const isAssigned = isAssetInService(asset.status)
-  const inRepair = statusLower.includes('repair') || statusLower.includes('maintenance')
+  const inRepair = isAssetInRepair(asset.status)
+  const canAssign = !isDisposed && !inRepair && !isAssigned
+  const canShowAssignInMenu = !isDisposed && !inRepair
 
   return (
     <tr
@@ -70,22 +75,7 @@ export function AssetsTableRow({
         <span className="text-sm text-slate-350">{asset.asset_type || 'Other'}</span>
       </td>
       <td className="px-4 py-3 align-middle min-w-[140px]">
-        <div className="space-y-1 min-w-0">
-          {asset.department ? (
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-violet-glow bg-violet-core/10 border border-violet-core/20 px-2 py-0.5 rounded-full inline-flex items-center gap-1 max-w-full">
-              <Building2 className="w-2.5 h-2.5 shrink-0 text-violet-glow" />
-              <span className="truncate">{asset.department}</span>
-            </span>
-          ) : (
-            <span className="text-xs text-muted-foreground">Unassigned</span>
-          )}
-          {asset.location && (
-            <span className="text-xs text-slate-400 flex items-center gap-1 min-w-0">
-              <MapPin className="w-3 h-3 text-slate-500 shrink-0" />
-              <span className="truncate">{asset.location}</span>
-            </span>
-          )}
-        </div>
+        <AssetAssignmentCell asset={asset} />
       </td>
       <td className="px-4 py-3 align-middle whitespace-nowrap">
         <CommonStatusBadge variant={getAssetStatusBadgeVariant(asset.status)} label={status.label} />
@@ -95,49 +85,64 @@ export function AssetsTableRow({
           {formatCost(asset.purchase_cost)}
         </span>
       </td>
-      <td className="px-4 py-3 align-middle text-right w-12" onClick={(e) => e.stopPropagation()}>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-accent">
-              <MoreHorizontal className="w-4 h-4" />
+      <td className="px-4 py-3 align-middle text-right min-w-[100px]" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-end gap-1">
+          {canAssign && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className={cn(uiOutlineBtn, 'h-8 px-2.5 text-xs gap-1')}
+              onClick={() => onAssign(asset)}
+              aria-label={`Assign ${asset.name}`}
+            >
+              <UserCheck className="w-3.5 h-3.5" />
+              Assign
             </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="bg-card border-border/80 text-cloud">
-            <DropdownMenuItem onClick={() => router.push(`/assets/${asset.id}`)} className="cursor-pointer">
-              <Eye className="w-4 h-4 mr-2 text-slate-400" />
-              View Details
-            </DropdownMenuItem>
+          )}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hover:bg-accent" aria-label="Asset actions">
+                <MoreHorizontal className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="bg-card border-border/80 text-cloud">
+              <DropdownMenuItem onClick={() => router.push(`/assets/${asset.id}`)} className="cursor-pointer">
+                <Eye className="w-4 h-4 mr-2 text-slate-400" />
+                View Details
+              </DropdownMenuItem>
 
-            {!isDisposed && (
-              <>
-                <DropdownMenuSeparator className="border-border/40" />
-                {!isAssigned && !inRepair && (
-                  <DropdownMenuItem onClick={() => router.push(`/assets/${asset.id}?tab=overview`)} className="cursor-pointer">
-                    <UserCheck className="w-4 h-4 mr-2 text-slate-400" />
-                    Assign Asset
-                  </DropdownMenuItem>
-                )}
-                {isAssigned && (
-                  <DropdownMenuItem onClick={() => router.push(`/assets/${asset.id}?tab=overview`)} className="cursor-pointer">
-                    <RefreshCw className="w-4 h-4 mr-2 text-slate-400" />
-                    Transfer Asset
-                  </DropdownMenuItem>
-                )}
-              </>
-            )}
+              {!isDisposed && (
+                <>
+                  <DropdownMenuSeparator className="border-border/40" />
+                  {canShowAssignInMenu && (
+                    <DropdownMenuItem onClick={() => onAssign(asset)} className="cursor-pointer">
+                      <UserCheck className="w-4 h-4 mr-2 text-slate-400" />
+                      Assign Asset
+                    </DropdownMenuItem>
+                  )}
+                  {isAssigned && (
+                    <DropdownMenuItem onClick={() => router.push(`/assets/${asset.id}`)} className="cursor-pointer">
+                      <RefreshCw className="w-4 h-4 mr-2 text-slate-400" />
+                      Transfer Asset
+                    </DropdownMenuItem>
+                  )}
+                </>
+              )}
 
-            <DropdownMenuSeparator className="border-border/40" />
-            <DropdownMenuItem onClick={() => onEdit(asset)} className="cursor-pointer">
-              <Pencil className="w-4 h-4 mr-2 text-slate-400" />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuSeparator className="border-border/40" />
-            <DropdownMenuItem onClick={() => onDelete(asset.id)} className="text-destructive focus:text-destructive cursor-pointer">
-              <Trash2 className="w-4 h-4 mr-2" />
-              Dispose
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              <DropdownMenuSeparator className="border-border/40" />
+              <DropdownMenuItem onClick={() => onEdit(asset)} className="cursor-pointer">
+                <Pencil className="w-4 h-4 mr-2 text-slate-400" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuSeparator className="border-border/40" />
+              <DropdownMenuItem onClick={() => onDelete(asset.id)} className="text-destructive focus:text-destructive cursor-pointer">
+                <Trash2 className="w-4 h-4 mr-2" />
+                Dispose
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </td>
     </tr>
   )

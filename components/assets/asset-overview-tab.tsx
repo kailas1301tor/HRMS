@@ -1,15 +1,18 @@
 // components/assets/asset-overview-tab.tsx
 'use client'
 
-import { Calendar, DollarSign, Clock, MapPin, Building, Info, Settings, Shield } from 'lucide-react'
+import { Calendar, DollarSign, Clock, MapPin, Building, Info, Settings, Shield, User } from 'lucide-react'
 import type { BackendAsset } from '@/types/asset'
 import { cn } from '@/lib/utils'
+import { getAssetAssignmentDisplay } from '@/lib/helpers/asset-assignment'
 
 interface AssetOverviewTabProps {
   asset: BackendAsset
 }
 
 export function AssetOverviewTab({ asset }: AssetOverviewTabProps) {
+  const assignment = getAssetAssignmentDisplay(asset)
+
   const formatDate = (dateStr: string | null) => {
     if (!dateStr) return 'N/A'
     return new Date(dateStr).toLocaleDateString('en-US', {
@@ -56,6 +59,21 @@ export function AssetOverviewTab({ asset }: AssetOverviewTabProps) {
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-midnight/30 border border-border/40 p-4 rounded-[20px] [corner-shape:squircle]">
             <div className="flex items-start gap-2.5">
+              {assignment?.kind === 'department' ? (
+                <Building className="w-4 h-4 text-violet-glow mt-1" />
+              ) : (
+                <User className="w-4 h-4 text-violet-glow mt-1" />
+              )}
+              <div>
+                <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">
+                  {assignment?.kind === 'department' ? 'Assigned Department' : 'Assigned To'}
+                </span>
+                <p className="text-sm font-medium text-cloud mt-0.5">
+                  {assignment?.label || 'Unassigned'}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-2.5">
               <Building className="w-4 h-4 text-violet-glow mt-1" />
               <div>
                 <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Department</span>
@@ -64,7 +82,7 @@ export function AssetOverviewTab({ asset }: AssetOverviewTabProps) {
                 </p>
               </div>
             </div>
-            <div className="flex items-start gap-2.5">
+            <div className="flex items-start gap-2.5 sm:col-span-2">
               <MapPin className="w-4 h-4 text-slate-500 mt-1" />
               <div>
                 <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Location / Desk</span>

@@ -7,6 +7,7 @@ import { invalidateEmployeeDropdowns } from '@/components/employees/useEmployeeD
 import { loadMasterList } from '@/lib/helpers/load-master-list'
 import { departmentService } from '@/services/department-service'
 import { designationService } from '@/services/designation-service'
+import { subscribeSettingsDepartmentsInvalidation } from './invalidate-settings-departments'
 import type { Department, Designation } from '@/types/settings'
 
 export interface UseDesignationSettingsReturn {
@@ -92,6 +93,12 @@ export function useDesignationSettings(): UseDesignationSettingsReturn {
 
   useEffect(() => {
     reloadDepartments()
+  }, [reloadDepartments])
+
+  useEffect(() => {
+    return subscribeSettingsDepartmentsInvalidation(() => {
+      void reloadDepartments()
+    })
   }, [reloadDepartments])
 
   useEffect(() => {

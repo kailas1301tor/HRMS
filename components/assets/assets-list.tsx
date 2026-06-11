@@ -21,6 +21,7 @@ import { AssetCard } from './asset-card'
 import { AssetCardSkeleton } from './asset-card-skeleton'
 import { AddAssetModal } from './add-asset-modal'
 import { DisposeAssetDialog } from './dispose-asset-dialog'
+import { AssignAssetDialog } from './assign-asset-dialog'
 import { useAssetsTable } from './useAssetsTable'
 
 export function AssetsList() {
@@ -29,6 +30,7 @@ export function AssetsList() {
     pagination,
     dropdowns,
     departments,
+    dropdownsLoading,
     dropdownsError,
     reloadDropdowns,
     isTableLoading,
@@ -36,6 +38,7 @@ export function AssetsList() {
     selectedAsset,
     isAddOpen,
     disposeTargetId,
+    assignTargetId,
     localSearch,
     setLocalSearch,
     statusFilter,
@@ -44,6 +47,7 @@ export function AssetsList() {
     setSelectedAsset,
     setIsAddOpen,
     setDisposeTargetId,
+    setAssignTargetId,
     handleRetry,
     updateQueryParams,
     handleClearFilters,
@@ -110,6 +114,7 @@ export function AssetsList() {
             pagination={pagination}
             onEdit={() => {}}
             onDispose={() => {}}
+            onAssign={() => {}}
             onPageChange={() => {}}
           />
         </>
@@ -147,6 +152,7 @@ export function AssetsList() {
                   setIsAddOpen(true)
                 }}
                 onDelete={(id) => setDisposeTargetId(id)}
+                onAssign={(a) => setAssignTargetId(a.id)}
               />
             ))}
           </CommonMobileCardGrid>
@@ -172,6 +178,7 @@ export function AssetsList() {
               setIsAddOpen(true)
             }}
             onDispose={(id) => setDisposeTargetId(id)}
+            onAssign={(a) => setAssignTargetId(a.id)}
             onPageChange={(page) => updateQueryParams({ page: String(page) })}
           />
         </>
@@ -187,6 +194,9 @@ export function AssetsList() {
         editAsset={selectedAsset}
         dropdowns={dropdowns}
         departments={departments}
+        metadataLoading={dropdownsLoading}
+        metadataError={dropdownsError}
+        onReloadMetadata={reloadDropdowns}
       />
 
       {disposeTargetId !== null && (
@@ -197,6 +207,18 @@ export function AssetsList() {
           dropdowns={dropdowns}
           onSuccess={() => {
             setDisposeTargetId(null)
+            handleRetry()
+          }}
+        />
+      )}
+
+      {assignTargetId !== null && (
+        <AssignAssetDialog
+          open={assignTargetId !== null}
+          onOpenChange={(open) => !open && setAssignTargetId(null)}
+          assetId={assignTargetId}
+          onSuccess={() => {
+            setAssignTargetId(null)
             handleRetry()
           }}
         />

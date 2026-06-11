@@ -49,11 +49,14 @@ export function CreateRequestPage() {
     employeeError,
     canSubmit,
     leaveTypes,
-    holidayDates,
+    holidayEvents,
+    existingLeaveDates,
     sessionChoices,
     documentTypeChoices,
     isLoadingMetadata,
     hasMetadataError,
+    isCalendarLoading,
+    hasCalendarError,
     reloadMetadata,
     isSubmitting,
     handleCalculateLeaveDays,
@@ -129,7 +132,7 @@ export function CreateRequestPage() {
       {hasMetadataError && !isFormLoading ? (
         <CommonErrorState
           title="Failed to load form data"
-          message="Request choices, leave types, or holidays could not be loaded."
+          message="Request choices or leave types could not be loaded."
           onRetry={reloadMetadata}
         />
       ) : isFormLoading ? (
@@ -155,15 +158,26 @@ export function CreateRequestPage() {
           )}
 
           {selectedType === 'leave' && (
-            <LeaveRequestForm
-              leaveTypes={leaveTypes}
-              holidayDates={holidayDates}
-              sessionChoices={sessionChoices}
-              isSubmitting={isSubmitting || !canSubmit}
-              onCalculate={handleCalculateLeaveDays}
-              onSubmit={handleSubmitLeave}
-              onCancel={handleCancel}
-            />
+            <>
+              {hasCalendarError && (
+                <CommonErrorBanner
+                  message="Leave calendar could not be loaded. You can still submit a request."
+                  onRetry={reloadMetadata}
+                  className="mb-4"
+                />
+              )}
+              <LeaveRequestForm
+                leaveTypes={leaveTypes}
+                holidayEvents={holidayEvents}
+                existingLeaveDates={existingLeaveDates}
+                isCalendarLoading={isCalendarLoading}
+                sessionChoices={sessionChoices}
+                isSubmitting={isSubmitting || !canSubmit}
+                onCalculate={handleCalculateLeaveDays}
+                onSubmit={handleSubmitLeave}
+                onCancel={handleCancel}
+              />
+            </>
           )}
 
           {selectedType !== 'leave' && (

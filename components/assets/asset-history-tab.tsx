@@ -86,7 +86,7 @@ export function AssetHistoryTab({ assetId }: AssetHistoryTabProps) {
           })
 
           return (
-            <div key={entry.id || idx} className="relative group animate-in slide-in-from-left-2 duration-200">
+            <div key={`history-${idx}-${entry.id}-${entry.date}-${entry.action}`} className="relative group animate-in slide-in-from-left-2 duration-200">
               {/* Timeline marker */}
               <div className={cn(
                 'absolute -left-[37px] top-1.5 w-6 h-6 rounded-full border flex items-center justify-center shadow-xs transition-colors',

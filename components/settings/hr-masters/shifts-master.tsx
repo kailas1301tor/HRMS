@@ -11,8 +11,8 @@ import {
   SettingsFormDialog,
   SettingsDeleteDialog,
 } from '@/components/settings/shared'
-import { uiInput } from '@/lib/ui/design-system'
-import { CommonErrorState } from '@/components/common'
+import { uiInput, uiSkeletonBlock } from '@/lib/ui/design-system'
+import { CommonErrorBanner, CommonErrorState } from '@/components/common'
 import { useShiftsMaster } from './useShiftsMaster'
 import { useShiftsList } from './useShiftsList'
 import { ShiftLateDeductionSection } from './shift-late-deduction-section'
@@ -22,6 +22,8 @@ export function ShiftsMaster() {
     isShiftModalOpen,
     setIsShiftModalOpen,
     editingShift,
+    isLoadingEdit,
+    editLoadError,
     isSubmitting,
     shiftName,
     setShiftName,
@@ -42,6 +44,7 @@ export function ShiftsMaster() {
     isDeleting,
     handleOpenAdd,
     handleOpenEdit,
+    handleRetryEditLoad,
     handleSaveShift,
     handleDeleteShift,
   } = useShiftsMaster({ onRefresh: reload })
@@ -130,10 +133,29 @@ export function ShiftsMaster() {
             ? 'Update the shift configuration below.'
             : 'Configure a new shift schedule.'
         }
-        isSubmitting={isSubmitting}
+        isSubmitting={isSubmitting || isLoadingEdit}
         size="xl"
         onSubmit={handleSaveShift}
       >
+        {isLoadingEdit ? (
+          <div className="space-y-4" aria-busy="true" aria-label="Loading shift details">
+            <div className={`h-10 w-full rounded-xl ${uiSkeletonBlock}`} />
+            <div className={`h-10 w-full rounded-xl ${uiSkeletonBlock}`} />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className={`h-10 w-full rounded-xl ${uiSkeletonBlock}`} />
+              <div className={`h-10 w-full rounded-xl ${uiSkeletonBlock}`} />
+            </div>
+            <div className={`h-24 w-full rounded-2xl ${uiSkeletonBlock}`} />
+          </div>
+        ) : (
+          <>
+        {editLoadError && (
+          <CommonErrorBanner
+            message={editLoadError}
+            onRetry={() => void handleRetryEditLoad()}
+            className="mb-4"
+          />
+        )}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label htmlFor="shift-name" className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -141,7 +163,7 @@ export function ShiftsMaster() {
             </Label>
             <Input
               id="shift-name"
-              value={shiftName}
+              value={shiftName ?? ''}
               onChange={(e) => setShiftName(e.target.value)}
               placeholder="e.g. MORNING"
               className={uiInput}
@@ -157,7 +179,7 @@ export function ShiftsMaster() {
               id="shift-standard-hours"
               type="number"
               step="0.5"
-              value={shiftStandardHours}
+              value={shiftStandardHours ?? '8'}
               onChange={(e) => setShiftStandardHours(e.target.value)}
               className={uiInput}
               required
@@ -173,7 +195,7 @@ export function ShiftsMaster() {
             <Input
               id="shift-start"
               type="time"
-              value={shiftStartTime}
+              value={shiftStartTime ?? '09:00'}
               onChange={(e) => setShiftStartTime(e.target.value)}
               className={uiInput}
               required
@@ -187,7 +209,7 @@ export function ShiftsMaster() {
             <Input
               id="shift-end"
               type="time"
-              value={shiftEndTime}
+              value={shiftEndTime ?? '18:00'}
               onChange={(e) => setShiftEndTime(e.target.value)}
               className={uiInput}
               required
@@ -204,6 +226,8 @@ export function ShiftsMaster() {
           onRemovePolicy={handleRemovePolicy}
           disabled={isSubmitting}
         />
+          </>
+        )}
       </SettingsFormDialog>
 
       <SettingsDeleteDialog

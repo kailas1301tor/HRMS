@@ -27,13 +27,3 @@ export const TICKET_STATUS_VARIANT: Record<TicketStatus, StatusBadgeVariant> = {
   closed: 'inactive',
   rejected: 'rejected',
 }
-
-export const TICKET_STATUS_FILTERS: { value: 'all' | TicketStatus; label: string }[] = [
-  { value: 'all', label: 'All' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'in_progress', label: 'In Progress' },
-  { value: 'approved', label: 'Approved' },
-  { value: 'resolved', label: 'Resolved' },
-  { value: 'closed', label: 'Closed' },
-  { value: 'rejected', label: 'Rejected' },
-]

@@ -18,13 +18,12 @@ import { CreateTicketDialog } from './create-ticket-dialog'
 import { TicketDeleteDialog, TicketDetailDialog } from './ticket-detail-dialog'
 import {
   TICKET_PRIORITY_VARIANT,
-  TICKET_STATUS_FILTERS,
   TICKET_STATUS_LABEL,
   TICKET_STATUS_VARIANT,
 } from './ticket-constants'
 import { useTicketsList } from './useTicketsList'
 import { useTicketActions } from './useTicketActions'
-import type { TicketPriorityFilter, TicketStatusFilter } from './useTicketsList'
+import type { TicketPriorityFilter } from './useTicketsList'
 
 const PRIORITY_FILTERS = [
   { value: 'all', label: 'All' },
@@ -43,8 +42,6 @@ export function TicketsList() {
     setSearchQuery,
     priorityFilter,
     setPriorityFilter,
-    statusFilter,
-    setStatusFilter,
     reload,
   } = useTicketsList()
 
@@ -90,18 +87,11 @@ export function TicketsList() {
         searchPlaceholder="Search tickets..."
       />
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-        <CommonFilterChips
-          options={[...PRIORITY_FILTERS]}
-          value={priorityFilter}
-          onChange={(value) => setPriorityFilter(value as TicketPriorityFilter)}
-        />
-        <CommonFilterChips
-          options={TICKET_STATUS_FILTERS}
-          value={statusFilter}
-          onChange={(value) => setStatusFilter(value as TicketStatusFilter)}
-        />
-      </div>
+      <CommonFilterChips
+        options={[...PRIORITY_FILTERS]}
+        value={priorityFilter}
+        onChange={(value) => setPriorityFilter(value as TicketPriorityFilter)}
+      />
 
       {isLoading ? (
         <div className="space-y-3">

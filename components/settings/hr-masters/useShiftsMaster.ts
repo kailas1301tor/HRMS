@@ -1,5 +1,5 @@
 // components/settings/hr-masters/useShiftsMaster.ts
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { toast } from 'sonner'
 import { invalidateAttendanceShifts } from '@/components/attendance/useAttendanceShifts'
 import { shiftService } from '@/services/shift-service'
@@ -14,6 +14,8 @@ export interface UseShiftsMasterReturn {
   isShiftModalOpen: boolean
   setIsShiftModalOpen: (open: boolean) => void
   editingShift: FrontendShift | null
+  isLoadingEdit: boolean
+  editLoadError: string | null
   isSubmitting: boolean
   shiftName: string
   setShiftName: (name: string) => void
@@ -33,9 +35,37 @@ export interface UseShiftsMasterReturn {
   setDeleteTarget: (shift: FrontendShift | null) => void
   isDeleting: boolean
   handleOpenAdd: () => void
-  handleOpenEdit: (shift: FrontendShift) => void
+  handleOpenEdit: (shift: FrontendShift) => Promise<void>
+  handleRetryEditLoad: () => Promise<void>
   handleSaveShift: (e: React.FormEvent) => Promise<void>
   handleDeleteShift: () => Promise<void>
+}
+
+function formatTimeValue(time: string | undefined, fallback: string): string {
+  const trimmed = (time ?? '').trim()
+  return trimmed || fallback
+}
+
+function formatStandardHours(hours: number): string {
+  if (!Number.isFinite(hours) || hours <= 0) return '8'
+  return String(hours)
+}
+
+function normalizePolicyForForm(
+  policy: LateDeductionPolicy,
+  fallbackTime: string,
+): LateDeductionPolicy {
+  return {
+    id: policy.id,
+    name: policy.name ?? '',
+    time: formatTimeValue(policy.time, fallbackTime),
+    deduction_type: policy.deduction_type || FIXED_CALCULATE_TYPE,
+    value: policy.value ?? '',
+  }
+}
+
+function hasUsableShiftFields(shift: FrontendShift): boolean {
+  return Boolean(shift.name.trim() && shift.startTime && shift.endTime)
 }
 
 function createEmptyPolicy(startTime: string): LateDeductionPolicy {
@@ -50,7 +80,11 @@ function createEmptyPolicy(startTime: string): LateDeductionPolicy {
 export function useShiftsMaster({ onRefresh }: UseShiftsMasterProps): UseShiftsMasterReturn {
   const [isShiftModalOpen, setIsShiftModalOpen] = useState(false)
   const [editingShift, setEditingShift] = useState<FrontendShift | null>(null)
+  const [isLoadingEdit, setIsLoadingEdit] = useState(false)
+  const [editLoadError, setEditLoadError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const editFetchIdRef = useRef(0)
+  const pendingEditShiftRef = useRef<FrontendShift | null>(null)
 
   const [shiftName, setShiftName] = useState('')
   const [shiftStartTime, setShiftStartTime] = useState('09:00')
@@ -72,6 +106,8 @@ export function useShiftsMaster({ onRefresh }: UseShiftsMasterProps): UseShiftsM
     setIsLateDeductionRequired(false)
     setLateDeductionPolicies([createEmptyPolicy('09:15')])
     setEditingShift(null)
+    setEditLoadError(null)
+    pendingEditShiftRef.current = null
   }
 
   const handleOpenAdd = (): void => {
@@ -79,19 +115,63 @@ export function useShiftsMaster({ onRefresh }: UseShiftsMasterProps): UseShiftsM
     setIsShiftModalOpen(true)
   }
 
-  const handleOpenEdit = (shift: FrontendShift): void => {
-    setShiftName(shift.name)
-    setShiftStartTime(shift.startTime)
-    setShiftEndTime(shift.endTime)
-    setShiftStandardHours(String(shift.standardWorkHours))
+  const populateFormFromShift = (shift: FrontendShift): void => {
+    const startTime = formatTimeValue(shift.startTime, '09:00')
+    const endTime = formatTimeValue(shift.endTime, '18:00')
+
+    setShiftName(shift.name ?? '')
+    setShiftStartTime(startTime)
+    setShiftEndTime(endTime)
+    setShiftStandardHours(formatStandardHours(shift.standardWorkHours))
     setIsLateDeductionRequired(shift.isLateDeductionRequired)
     setLateDeductionPolicies(
       shift.lateDeductionPolicies.length > 0
-        ? shift.lateDeductionPolicies
-        : [createEmptyPolicy(shift.startTime)],
+        ? shift.lateDeductionPolicies.map((policy) => normalizePolicyForForm(policy, startTime))
+        : [createEmptyPolicy(startTime)],
     )
+  }
+
+  const handleOpenEdit = async (shift: FrontendShift): Promise<void> => {
+    const fetchId = ++editFetchIdRef.current
+    pendingEditShiftRef.current = shift
     setEditingShift(shift)
     setIsShiftModalOpen(true)
+    setIsLoadingEdit(true)
+    setEditLoadError(null)
+
+    try {
+      const detail = await shiftService.getShiftById(shift.id)
+      if (fetchId !== editFetchIdRef.current) return
+
+      if (detail && hasUsableShiftFields(detail)) {
+        populateFormFromShift(detail)
+        setEditingShift(detail)
+        return
+      }
+
+      populateFormFromShift(shift)
+      setEditingShift(shift)
+      const message = 'Could not load full shift details. Showing cached values.'
+      setEditLoadError(message)
+      toast.error('Could not load full shift details')
+    } catch (error: unknown) {
+      if (fetchId !== editFetchIdRef.current) return
+      populateFormFromShift(shift)
+      setEditingShift(shift)
+      const message = error instanceof Error ? error.message : 'Failed to load shift details'
+      setEditLoadError(`${message}. Showing cached values.`)
+      toast.error(message)
+    } finally {
+      if (fetchId === editFetchIdRef.current) {
+        setIsLoadingEdit(false)
+      }
+    }
+  }
+
+  const handleRetryEditLoad = async (): Promise<void> => {
+    const shift = pendingEditShiftRef.current ?? editingShift
+    if (!shift) return
+    await handleOpenEdit(shift)
   }
 
   const handlePolicyChange = (index: number, field: keyof LateDeductionPolicy, value: string): void => {
@@ -180,8 +260,12 @@ export function useShiftsMaster({ onRefresh }: UseShiftsMasterProps): UseShiftsM
   }
 
   const handleDialogOpenChange = useCallback((open: boolean): void => {
-    if (!open && !isSubmitting) {
-      resetForm()
+    if (!open) {
+      editFetchIdRef.current += 1
+      setIsLoadingEdit(false)
+      if (!isSubmitting) {
+        resetForm()
+      }
     }
     if (!isSubmitting) setIsShiftModalOpen(open)
   }, [isSubmitting])
@@ -190,6 +274,8 @@ export function useShiftsMaster({ onRefresh }: UseShiftsMasterProps): UseShiftsM
     isShiftModalOpen,
     setIsShiftModalOpen: handleDialogOpenChange,
     editingShift,
+    isLoadingEdit,
+    editLoadError,
     isSubmitting,
     shiftName,
     setShiftName,
@@ -210,6 +296,7 @@ export function useShiftsMaster({ onRefresh }: UseShiftsMasterProps): UseShiftsM
     isDeleting,
     handleOpenAdd,
     handleOpenEdit,
+    handleRetryEditLoad,
     handleSaveShift,
     handleDeleteShift,
   }

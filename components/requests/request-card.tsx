@@ -6,13 +6,10 @@ import { Clock, ChevronDown } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { CommonStatusBadge } from '@/components/common'
-import { Button } from '@/components/ui/button'
-import { uiCardInteractive, uiSquircleMd, uiSquircleSm } from '@/lib/ui/design-system'
+import { uiCardInteractive, uiSquircleMd } from '@/lib/ui/design-system'
 import type { Request } from './requests-constants'
 import { typeConfig, statusConfig } from './requests-constants'
-
-const actionBtnClass =
-  'h-10 w-full text-xs font-semibold tracking-tight shadow-sm transition-all active:scale-[0.98]'
+import { RequestActionButtons } from './request-action-buttons'
 
 interface RequestCardProps {
   request: Request
@@ -43,27 +40,27 @@ export function RequestCard({
       transition={{ delay: index * 0.03, duration: 0.28, ease: [0.25, 0.1, 0.25, 1] }}
       className={cn(
         uiCardInteractive,
-        'group relative flex flex-col overflow-hidden p-5 border-l-2',
+        'group relative flex flex-col overflow-hidden p-4 border-l-2',
         status.borderColor,
       )}
     >
-      <div className="flex flex-col gap-2.5">
+      <div className="flex flex-col gap-2">
         <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0 flex-1 space-y-1">
+          <div className="min-w-0 flex-1 space-y-0.5">
             <div className="flex items-center gap-1.5">
               <span
                 className={cn(
-                  'flex h-7 w-7 shrink-0 items-center justify-center rounded-[20px] [corner-shape:squircle] ring-1 ring-inset',
+                  'flex h-6 w-6 shrink-0 items-center justify-center rounded-[16px] [corner-shape:squircle] ring-1 ring-inset',
                   type.iconSurface
                 )}
               >
-                <TypeIcon className="h-3.5 w-3.5" aria-hidden />
+                <TypeIcon className="h-3 w-3" aria-hidden />
               </span>
-              <span className="truncate text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+              <span className="truncate text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
                 {type.label}
               </span>
             </div>
-            <h3 className="text-[15px] font-semibold leading-tight tracking-tight text-foreground line-clamp-2">
+            <h3 className="text-sm font-semibold leading-snug tracking-tight text-foreground line-clamp-2">
               {request.title}
             </h3>
           </div>
@@ -76,18 +73,18 @@ export function RequestCard({
             uiSquircleMd
           )}
         >
-          <div className="flex items-center gap-2.5 px-3 py-2">
-            <Avatar className="h-8 w-8 shrink-0 ring-1 ring-border/30">
+          <div className="flex items-center gap-2 px-2.5 py-1.5">
+            <Avatar className="h-7 w-7 shrink-0 ring-1 ring-border/30">
               <AvatarImage src={request.requester.avatar} alt="" />
-              <AvatarFallback className="bg-gradient-to-br from-violet-core to-violet-glow text-[10px] font-semibold text-white">
+              <AvatarFallback className="bg-gradient-to-br from-violet-core to-violet-glow text-[9px] font-semibold text-white">
                 {request.requester.initials}
               </AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[13px] font-medium leading-tight text-foreground">
+              <p className="truncate text-xs font-medium leading-tight text-foreground">
                 {request.requester.name}
               </p>
-              <p className="truncate text-[11px] text-muted-foreground">
+              <p className="truncate text-[10px] text-muted-foreground">
                 {request.requester.department && request.requester.department !== '—'
                   ? `${request.requester.department} · `
                   : ''}
@@ -99,16 +96,16 @@ export function RequestCard({
           {request.description ? (
             <>
               <div className="h-px bg-border/50" aria-hidden />
-              <p className="px-3 py-2 text-xs leading-snug text-muted-foreground line-clamp-2">
+              <p className="px-2.5 py-1.5 text-[11px] leading-snug text-muted-foreground line-clamp-2">
                 {request.description}
               </p>
             </>
           ) : null}
         </div>
 
-        <div className="space-y-2 pt-0.5">
+        <div className="space-y-1.5">
           <div className="flex items-center justify-between gap-2">
-            <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+            <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
               <Clock className="h-3 w-3 shrink-0 opacity-70" aria-hidden />
               {request.submittedAt}
             </span>
@@ -127,38 +124,7 @@ export function RequestCard({
           </div>
 
           {isPending ? (
-            <div className="grid grid-cols-2 gap-2">
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={onReject}
-                aria-label="Reject request"
-                className={cn(
-                  actionBtnClass,
-                  uiSquircleSm,
-                  'border border-border/60 bg-white text-foreground',
-                  'shadow-[0_2px_10px_rgba(15,23,42,0.06)]',
-                  'hover:bg-muted/40 hover:text-foreground',
-                  'dark:bg-card dark:hover:bg-muted/30'
-                )}
-              >
-                Reject
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={onApprove}
-                aria-label="Approve request"
-                className={cn(
-                  actionBtnClass,
-                  uiSquircleSm,
-                  'bg-[#34C759] text-white hover:bg-[#2DB84E] hover:text-white',
-                  'shadow-[0_4px_16px_rgba(52,199,89,0.22)]'
-                )}
-              >
-                Approve
-              </Button>
-            </div>
+            <RequestActionButtons onReject={onReject} onApprove={onApprove} />
           ) : null}
         </div>
       </div>
@@ -169,12 +135,12 @@ export function RequestCard({
           animate={{ height: 'auto', opacity: 1 }}
           exit={{ height: 0, opacity: 0 }}
           transition={{ duration: 0.22, ease: [0.25, 0.1, 0.25, 1] }}
-          className="border-t border-border/40 bg-muted/20 px-4 py-3 dark:bg-white/[0.02]"
+          className="border-t border-border/40 bg-muted/20 px-3 py-2 dark:bg-white/[0.02]"
         >
-          <p className="mb-2 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+          <p className="mb-1.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
             Approval timeline
           </p>
-          <div className="relative space-y-3.5 pl-6">
+          <div className="relative space-y-2.5 pl-6">
             {request.timeline.map((step, i) => {
               const isLast = i === request.timeline.length - 1
               return (

@@ -2,6 +2,7 @@
 import { createMasterCrudHook } from '@/lib/hooks/create-master-crud-hook'
 import { invalidateDocumentCategories } from '@/components/documents/useDocumentCategories'
 import { invalidateEmployeeDropdowns } from '@/components/employees/useEmployeeDropdowns'
+import { invalidateLeaveTypes } from '@/components/settings/invalidate-leave-types'
 import { employeeTypeService } from '@/services/employee-type-service'
 import { leaveTypeService } from '@/services/leave-type-service'
 import { employeeDocumentTypeService } from '@/services/employee-document-type-service'
@@ -38,7 +39,10 @@ export const useLeaveTypesMaster = createMasterCrudHook(
     saveError: 'Failed to save leave type',
     deleteError: 'Failed to delete leave type',
   },
-  invalidateEmployeeDropdowns
+  () => {
+    invalidateEmployeeDropdowns()
+    invalidateLeaveTypes()
+  }
 )
 
 export const useEmployeeDocTypesMaster = createMasterCrudHook(

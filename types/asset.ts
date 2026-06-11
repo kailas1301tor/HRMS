@@ -33,12 +33,26 @@ export interface ScheduleMaintenancePayload {
   estimated_cost: number
 }
 
-export interface ReturnAssetPayload {
+export type ReturnAssetTarget = 'department' | 'employee'
+
+export interface ReturnAssetPayloadBase {
   asset_id: number
-  return_to_department: number
   return_date: string
   service_cost?: number
 }
+
+export interface ReturnAssetToDepartmentPayload extends ReturnAssetPayloadBase {
+  return_to_department: number
+}
+
+export interface ReturnAssetToEmployeePayload extends ReturnAssetPayloadBase {
+  return_to_employee: number
+}
+
+export type ReturnAssetPayload = ReturnAssetToDepartmentPayload | ReturnAssetToEmployeePayload
+
+/** @deprecated Use ReturnAssetToDepartmentPayload */
+export type ReturnAssetDepartmentPayload = ReturnAssetToDepartmentPayload
 
 export interface DisposeAssetPayload {
   asset: number
@@ -96,6 +110,16 @@ export interface Asset {
   asset_category?: string
   department?: string
   status?: string
+  asset_type_id?: number
+  asset_category_id?: number
+  department_id?: number
+  status_id?: number
+  /** Primary assignee display name from API (`assigned` field) */
+  assigned?: string | null
+  assigned_to_employee?: number | null
+  assigned_department?: number | null
+  assigned_to_employee_name?: string | null
+  employee_name?: string | null
   created_at: string
   updated_at: string
   is_active: boolean

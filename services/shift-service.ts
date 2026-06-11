@@ -18,6 +18,25 @@ interface SingleShiftResponse {
   }
 }
 
+interface ShiftDetailResponse {
+  message: string
+  results: {
+    data: BackendShift | BackendShift[]
+  }
+}
+
+function resolveBackendShift(
+  data: BackendShift | BackendShift[] | null | undefined,
+  id: number,
+): BackendShift | null {
+  if (data == null) return null
+  if (Array.isArray(data)) {
+    if (data.length === 0) return null
+    return data.find((shift) => shift.id === id) ?? data[0] ?? null
+  }
+  return data
+}
+
 /** Strip seconds from "HH:MM:SS" → "HH:MM" */
 function formatTime(timeStr: string): string {
   if (!timeStr) return ''
@@ -46,25 +65,43 @@ function mapPolicyToBackend(policy: LateDeductionPolicy): LateDeductionPolicy {
   }
 }
 
+function parseBooleanFlag(value: unknown): boolean {
+  if (typeof value === 'boolean') return value
+  if (typeof value === 'number') return value !== 0
+  if (typeof value === 'string') {
+    const normalized = value.trim().toLowerCase()
+    return normalized === 'true' || normalized === '1'
+  }
+  return false
+}
+
 function mapBackendPolicy(policy: LateDeductionPolicy): LateDeductionPolicy {
   return {
     id: policy.id,
-    name: policy.name,
-    time: normalizePolicyTime(policy.time),
-    deduction_type: policy.deduction_type,
-    value: policy.value,
+    name: policy.name ?? '',
+    time: normalizePolicyTime(policy.time ?? ''),
+    deduction_type: policy.deduction_type ?? '',
+    value: policy.value != null ? String(policy.value) : '',
   }
 }
 
 function mapBackendToFrontend(shift: BackendShift): FrontendShift {
+  const lateDeductionPolicies = (shift.late_deduction_policies ?? []).map(mapBackendPolicy)
+  const isLateDeductionRequired =
+    shift.is_late_deduction_required != null
+      ? parseBooleanFlag(shift.is_late_deduction_required)
+      : lateDeductionPolicies.length > 0
+
+  const standardHours = parseFloat(String(shift.standard_work_hours ?? ''))
+
   return {
     id: shift.id,
-    name: shift.name,
-    startTime: formatTime(shift.start_time),
-    endTime: formatTime(shift.end_time),
-    standardWorkHours: parseFloat(shift.standard_work_hours) || 0,
-    isLateDeductionRequired: shift.is_late_deduction_required ?? false,
-    lateDeductionPolicies: (shift.late_deduction_policies ?? []).map(mapBackendPolicy),
+    name: shift.name ?? '',
+    startTime: formatTime(shift.start_time ?? ''),
+    endTime: formatTime(shift.end_time ?? ''),
+    standardWorkHours: Number.isFinite(standardHours) ? standardHours : 0,
+    isLateDeductionRequired,
+    lateDeductionPolicies,
   }
 }
 
@@ -85,6 +122,16 @@ export const shiftService = {
   async getShifts(signal?: AbortSignal): Promise<FrontendShift[]> {
     const response = await api.get<ShiftListResponse>('/api/master/shifts/', { signal })
     return (response.results?.data ?? []).map(mapBackendToFrontend)
+  },
+
+  async getShiftById(id: number, signal?: AbortSignal): Promise<FrontendShift | null> {
+    const response = await api.get<ShiftDetailResponse>('/api/master/shifts/', {
+      params: { id },
+      signal,
+    })
+    const shift = resolveBackendShift(response.results?.data, id)
+    if (!shift) return null
+    return mapBackendToFrontend(shift)
   },
 
   async createShift(payload: ShiftPayload): Promise<FrontendShift> {

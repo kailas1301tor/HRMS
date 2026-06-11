@@ -15,7 +15,7 @@ import {
 } from '@/components/ui/select'
 import { CommonFormFieldError } from '@/components/common'
 import { SettingsFormDialog } from '@/components/settings/shared'
-import type { DropdownItem } from '@/lib/types'
+import type { StringDropdownItem } from '@/lib/types'
 import { uiInput, uiSelect } from '@/lib/ui/design-system'
 import { isFixedCalculateType, payRuleToFormValues } from '@/lib/mappers/pay-rule-mapper'
 import type { PayRule, PayRuleChoices } from '@/types/settings'
@@ -52,7 +52,7 @@ function ChoiceSelect({
   id: string
   label: string
   value: string
-  options: DropdownItem[]
+  options: StringDropdownItem[]
   placeholder: string
   disabled?: boolean
   error?: string
@@ -69,7 +69,7 @@ function ChoiceSelect({
         </SelectTrigger>
         <SelectContent>
           {options.map((option) => (
-            <SelectItem key={`${id}-${option.id}`} value={option.name}>
+            <SelectItem key={`${id}-${option.id}`} value={option.id}>
               {option.name}
             </SelectItem>
           ))}
@@ -103,8 +103,8 @@ export function PayRuleFormDialog({
 
   useEffect(() => {
     if (!open) return
-    reset(editingRule ? payRuleToFormValues(editingRule) : DEFAULT_FORM_VALUES)
-  }, [open, editingRule, reset])
+    reset(editingRule ? payRuleToFormValues(editingRule, choices) : DEFAULT_FORM_VALUES)
+  }, [open, editingRule, choices, reset])
 
   const calculateType = watch('calculate_type')
   const category = watch('category')

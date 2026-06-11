@@ -43,6 +43,9 @@ export function AssetDetailView({ assetId }: AssetDetailViewProps) {
     asset,
     dropdowns,
     departments,
+    dropdownsLoading,
+    dropdownsError,
+    reloadDropdowns,
     isLoading,
     error,
     isAssignOpen,
@@ -259,6 +262,9 @@ export function AssetDetailView({ assetId }: AssetDetailViewProps) {
         editAsset={asset}
         dropdowns={dropdowns}
         departments={departments}
+        metadataLoading={dropdownsLoading}
+        metadataError={dropdownsError}
+        onReloadMetadata={reloadDropdowns}
       />
       <AssignAssetDialog
         open={isAssignOpen}

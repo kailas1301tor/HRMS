@@ -3,7 +3,7 @@
 
 import { type AssetDropdowns } from '@/types/asset'
 import { CommonEmptyState, CommonErrorState } from '@/components/common'
-import { Loader2, FileText, Upload, Trash2, Download, Plus } from 'lucide-react'
+import { Loader2, FileText, Upload, Trash2, Download, Plus, Eye } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import {
@@ -15,7 +15,10 @@ import {
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn } from '@/lib/utils'
-import { uiSkeletonBlock } from '@/lib/ui/design-system'
+import { uiCardInteractive, uiSkeletonBlock } from '@/lib/ui/design-system'
+import { formatAssetDocumentDate, openAssetDocument } from '@/lib/helpers/asset-document'
+import { downloadFileFromUrl } from '@/lib/helpers/download-file-url'
+import { toast } from 'sonner'
 import { useAssetDocumentsTab } from './useAssetDocumentsTab'
 
 interface AssetDocumentsTabProps {
@@ -171,8 +174,46 @@ export function AssetDocumentsTab({ assetId, dropdowns }: AssetDocumentsTabProps
           />
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {documents.map((doc) => (
-              <div key={doc.id} className="bg-midnight/35 border border-border/50 hover:border-border p-4 rounded-[20px] [corner-shape:squircle] flex items-start justify-between gap-3 transition-colors group">
+            {documents.map((doc) => {
+              const handleViewDocument = () => {
+                if (!doc.file_url) {
+                  toast.error('No file URL available')
+                  return
+                }
+                openAssetDocument(doc.file_url)
+              }
+
+              const handleDownloadDocument = async (e: React.MouseEvent) => {
+                e.stopPropagation()
+                if (!doc.file_url) {
+                  toast.error('No file URL available')
+                  return
+                }
+                try {
+                  await downloadFileFromUrl(doc.file_url)
+                } catch {
+                  openAssetDocument(doc.file_url)
+                }
+              }
+
+              return (
+              <div
+                key={doc.id}
+                role="button"
+                tabIndex={0}
+                onClick={handleViewDocument}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault()
+                    handleViewDocument()
+                  }
+                }}
+                className={cn(
+                  uiCardInteractive,
+                  'bg-midnight/35 border-border/50 p-4 flex items-start justify-between gap-3 group cursor-pointer'
+                )}
+                aria-label={`View ${getDocTypeName(doc.document_type)} document`}
+              >
                 <div className="flex items-start gap-3 min-w-0">
                   <div className="w-10 h-10 rounded-[16px] [corner-shape:squircle] bg-violet-core/10 text-violet-glow flex items-center justify-center shrink-0">
                     <FileText className="w-5 h-5" />
@@ -182,16 +223,27 @@ export function AssetDocumentsTab({ assetId, dropdowns }: AssetDocumentsTabProps
                       {getDocTypeName(doc.document_type)}
                     </h4>
                     <p className="text-[10px] text-slate-500 mt-0.5">
-                      Uploaded: {new Date(doc.uploaded_at).toLocaleDateString()}
+                      Uploaded: {formatAssetDocumentDate(doc.uploaded_at)}
                     </p>
-                    <a
-                      href={doc.file_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-[11px] text-violet-glow hover:text-violet-deep font-semibold flex items-center gap-1 mt-1.5"
-                    >
-                      <Download className="w-3.5 h-3.5" /> Download File
-                    </a>
+                    <div className="flex items-center gap-3 mt-1.5">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleViewDocument()
+                        }}
+                        className="text-[11px] text-violet-glow hover:text-violet-deep font-semibold flex items-center gap-1"
+                      >
+                        <Eye className="w-3.5 h-3.5" /> View
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleDownloadDocument}
+                        className="text-[11px] text-violet-glow hover:text-violet-deep font-semibold flex items-center gap-1"
+                      >
+                        <Download className="w-3.5 h-3.5" /> Download
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -199,8 +251,12 @@ export function AssetDocumentsTab({ assetId, dropdowns }: AssetDocumentsTabProps
                   variant="ghost"
                   size="icon"
                   disabled={isDeletingId === doc.id}
-                  onClick={() => handleDelete(doc.id)}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    handleDelete(doc.id)
+                  }}
                   className="h-8 w-8 text-slate-500 hover:text-destructive hover:bg-destructive/10 rounded-[16px] [corner-shape:squircle] opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                  aria-label="Delete document"
                 >
                   {isDeletingId === doc.id ? (
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -209,7 +265,7 @@ export function AssetDocumentsTab({ assetId, dropdowns }: AssetDocumentsTabProps
                   )}
                 </Button>
               </div>
-            ))}
+            )})}
           </div>
         )}
       </div>

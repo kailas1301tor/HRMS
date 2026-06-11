@@ -23,6 +23,7 @@ interface AssetsTableProps {
   pagination: { totalCount: number; totalPages: number; currentPage: number }
   onEdit: (asset: BackendAsset) => void
   onDispose: (id: number) => void
+  onAssign: (asset: BackendAsset) => void
   onPageChange: (page: number) => void
 }
 
@@ -32,6 +33,7 @@ export function AssetsTable({
   pagination,
   onEdit,
   onDispose,
+  onAssign,
   onPageChange,
 }: AssetsTableProps) {
   return (
@@ -76,6 +78,7 @@ export function AssetsTable({
                   asset={asset}
                   onEdit={onEdit}
                   onDelete={onDispose}
+                  onAssign={onAssign}
                 />
               ))
             )}
