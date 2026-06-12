@@ -51,7 +51,7 @@ export async function resolveCurrentEmployeeRecord(
     }
   }
 
-  const { data: employees } = await employeeService.getEmployees(
+  const { data: employees } = await employeeService.getEmployeesList(
     { page_size: 100 },
     signal
   )

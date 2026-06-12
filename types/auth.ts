@@ -10,14 +10,6 @@ export interface PendingAuthSession {
   expiresAt: number
 }
 
-/** Payload sent to POST /api/auth/session */
-export interface PersistSessionInput {
-  token: string
-  username: string
-  email: string
-  userId?: number
-}
-
 /** Result from a successful token refresh (future backend API). */
 export interface RefreshTokenResult {
   access: string

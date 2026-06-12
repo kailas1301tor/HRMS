@@ -1,5 +1,5 @@
 import { toast } from 'sonner'
-import { AUTH_COOKIE_NAMES, getClientCookie } from '@/lib/cookies'
+import { AUTH_COOKIE_NAMES, clearAuthCookies, getClientCookie } from '@/lib/cookies'
 import { resolveRequestUrl } from '@/lib/env'
 import { parseAuthErrorPayload } from '@/lib/helpers/parse-auth-form-errors'
 import { attemptSilentReauth } from '@/lib/auth/silent-reauth'
@@ -15,11 +15,7 @@ async function handleUnauthorized(): Promise<void> {
 
   isRedirectingToLogin = true
   toast.error('Your session has expired. Please sign in again.')
-  try {
-    await fetch('/api/auth/session', { method: 'DELETE' })
-  } catch {
-    // Best-effort session clear before redirect
-  }
+  clearAuthCookies()
   clearRefreshToken()
   window.location.href = '/login'
 }

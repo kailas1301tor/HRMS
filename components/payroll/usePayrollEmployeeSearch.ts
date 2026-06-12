@@ -32,7 +32,7 @@ export function usePayrollEmployeeSearch(): UsePayrollEmployeeSearchReturn {
       setIsEmployeesLoading(true)
       setEmployeesHasError(false)
       try {
-        const response = await employeeService.getEmployees(
+        const response = await employeeService.getEmployeesList(
           { page_size: 50 },
           controller.signal,
         )

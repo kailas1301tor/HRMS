@@ -1,13 +1,17 @@
 // services/auth-service.ts
 import { api, ApiError } from '@/lib/api'
-import { AUTH_COOKIE_NAMES, getClientCookie } from '@/lib/cookies'
+import {
+  AUTH_COOKIE_NAMES,
+  clearAuthCookies,
+  getClientCookie,
+  setAuthSessionCookies,
+} from '@/lib/cookies'
 import { clearRefreshToken, getRefreshToken, setRefreshToken } from '@/lib/auth/refresh-token-storage'
 import { clearPendingAuth } from '@/lib/helpers/pending-auth-storage'
 import type {
   CurrentUserProfile,
   CurrentUserProfileResponse,
   LoginResponse,
-  PersistSessionInput,
   RefreshTokenApiContract,
   RefreshTokenResponse,
   RefreshTokenResult,
@@ -40,35 +44,26 @@ export const authService = {
     )
   },
 
-  async persistSession(
+  persistSession(
     token: string,
     username: string,
     email: string,
     userId?: number
-  ): Promise<void> {
-    const response = await fetch('/api/auth/session', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, username, email, userId } satisfies PersistSessionInput),
-    })
-
-    if (!response.ok) {
-      let responseData: unknown
-      try {
-        responseData = await response.json()
-      } catch {
-        responseData = undefined
-      }
-      throw new ApiError('Failed to persist session', response.status, responseData)
-    }
+  ): void {
+    setAuthSessionCookies({ token, username, email, userId })
   },
 
-  async persistSessionFromCookies(accessToken: string): Promise<void> {
+  persistSessionFromCookies(accessToken: string): void {
     const username = getClientCookie(AUTH_COOKIE_NAMES.username) ?? ''
     const email = getClientCookie(AUTH_COOKIE_NAMES.email) ?? ''
     const rawUserId = getClientCookie(AUTH_COOKIE_NAMES.userId)
-    const userId = rawUserId ? Number(rawUserId) : undefined
-    await authService.persistSession(accessToken, username, email, userId)
+    const parsedUserId = rawUserId ? Number(rawUserId) : undefined
+    setAuthSessionCookies({
+      token: accessToken,
+      username,
+      email,
+      userId: parsedUserId && Number.isFinite(parsedUserId) ? parsedUserId : undefined,
+    })
   },
 
   storeTokensFromLogin(access: string, refresh?: string): void {
@@ -126,11 +121,7 @@ export const authService = {
   },
 
   async logout(): Promise<void> {
-    try {
-      await fetch('/api/auth/session', { method: 'DELETE' })
-    } catch {
-      // Proceed with redirect even if session clear fails
-    }
+    clearAuthCookies()
     clearRefreshToken()
     clearPendingAuth()
     window.location.href = '/login'

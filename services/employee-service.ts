@@ -145,6 +145,27 @@ export const employeeService = {
   },
 
   /**
+   * Permission-safe employee list for filter pickers outside the Employees tab.
+   */
+  async getEmployeesList(params: EmployeeListParams, signal?: AbortSignal): Promise<{
+    data: Employee[];
+    total_count: number;
+    total_pages: number;
+    current_page: number;
+  }> {
+    const response = await api.get<EmployeeListResponse>('/api/employee/employees-list/', {
+      params: cleanParams(params),
+      signal,
+    });
+    return {
+      data: response.results?.data || [],
+      total_count: response.results?.total_count || 0,
+      total_pages: response.results?.total_pages || 1,
+      current_page: response.results?.current_page || 1,
+    };
+  },
+
+  /**
    * Fetches a single employee detail from the backend.
    */
   async getEmployee(id: number, signal?: AbortSignal): Promise<Employee> {
