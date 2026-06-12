@@ -56,16 +56,32 @@ export interface UserPermission {
   codename: string
 }
 
+export interface ProfileField<T> {
+  value: T
+  is_editable: boolean
+}
+
+export interface CurrentUserProfileWire {
+  id: ProfileField<number>
+  username: ProfileField<string>
+  email: ProfileField<string>
+  permissions: ProfileField<UserPermission[]>
+  employee_profile_id?: ProfileField<number | null>
+  phone_number?: ProfileField<string>
+  address?: ProfileField<string>
+}
+
 export interface CurrentUserProfile {
   id: number
   username: string
   email: string
   permissions: UserPermission[]
+  employee_profile_id?: number | null
 }
 
 export interface CurrentUserProfileResponse {
   message: string
   results: {
-    data: CurrentUserProfile
+    data: CurrentUserProfileWire
   }
 }

@@ -11,7 +11,9 @@ import { clearPendingAuth } from '@/lib/helpers/pending-auth-storage'
 import type {
   CurrentUserProfile,
   CurrentUserProfileResponse,
+  CurrentUserProfileWire,
   LoginResponse,
+  ProfileField,
   RefreshTokenApiContract,
   RefreshTokenResponse,
   RefreshTokenResult,
@@ -19,6 +21,31 @@ import type {
 export type { LoginResponse } from '@/types/auth'
 
 const REFRESH_ENDPOINT: RefreshTokenApiContract['endpoint'] = '/api/auth/token/refresh/'
+
+function isProfileField<T>(field: unknown): field is ProfileField<T> {
+  return (
+    typeof field === 'object' &&
+    field !== null &&
+    'value' in field &&
+    'is_editable' in field
+  )
+}
+
+function unwrapField<T>(field: T | ProfileField<T> | undefined | null): T | undefined {
+  if (field === undefined || field === null) return undefined
+  if (isProfileField<T>(field)) return field.value
+  return field
+}
+
+function normalizeCurrentUserProfile(data: CurrentUserProfileWire): CurrentUserProfile {
+  return {
+    id: unwrapField(data.id) ?? 0,
+    username: unwrapField(data.username) ?? '',
+    email: unwrapField(data.email) ?? '',
+    permissions: unwrapField(data.permissions) ?? [],
+    employee_profile_id: unwrapField(data.employee_profile_id) ?? null,
+  }
+}
 
 export const authService = {
   async login(username: string, password: string): Promise<LoginResponse> {
@@ -94,12 +121,7 @@ export const authService = {
     if (!data) {
       throw new ApiError('Failed to load user profile', 500, response)
     }
-    return {
-      id: data.id,
-      username: data.username,
-      email: data.email,
-      permissions: data.permissions ?? [],
-    }
+    return normalizeCurrentUserProfile(data)
   },
 
   async refreshAccessToken(): Promise<RefreshTokenResult | null> {
