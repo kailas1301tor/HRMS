@@ -10,8 +10,11 @@ import type {
   DropdownItem,
   DropdownResponse,
   Employee,
+  EmployeeBankDetails,
   EmployeeListParams,
+  EmployeeListPickerResponse,
   EmployeeListResponse,
+  EmployeeListWireItem,
 } from '@/types/employee'
 import type { Department } from '@/types/settings'
 
@@ -33,6 +36,7 @@ function normalizeDropdownData(data: Partial<DropdownData> | null | undefined): 
     nationalities: data?.nationalities ?? [],
     status_choices: data?.status_choices ?? [],
     accommodation_choices: data?.accommodation_choices ?? [],
+    leave_types: data?.leave_types ?? [],
   };
 }
 
@@ -96,6 +100,36 @@ function dropdownDepartmentsToDepartments(items: DropdownItem[]): Department[] {
   return items.map(({ id, name }) => ({ id, name, description: '' }))
 }
 
+const EMPTY_EMPLOYEE_BANK_DETAILS: EmployeeBankDetails = {
+  bank_name: '',
+  account_number: '',
+  ifsc: '',
+  branch: '',
+}
+
+function mapEmployeeListWireItem(item: EmployeeListWireItem): Employee {
+  return {
+    id: item.id,
+    full_name: (item.full_name ?? item.name ?? '').trim(),
+    employee_id: item.employee_id ?? '',
+    user: item.user ?? { username: '', email: '' },
+    bank_details: EMPTY_EMPLOYEE_BANK_DETAILS,
+    phone_number: '',
+    role: 0,
+    department: '',
+    designation: '',
+    status: '',
+    shift: '',
+    employee_type: '',
+    nationality: '',
+    joined_date: '',
+    basic_salary: '',
+    accommodation: '',
+    date_of_birth: '',
+    address: '',
+  }
+}
+
 export const employeeService = {
   /**
    * Fetches dropdown metadata from the backend.
@@ -120,6 +154,14 @@ export const employeeService = {
   async getShiftsFromDropdowns(signal?: AbortSignal): Promise<DropdownItem[]> {
     const response = await api.get<DropdownResponse>('/api/employee/dropdowns/', { signal })
     return normalizeDropdownData(response.results?.data).shifts
+  },
+
+  /**
+   * Leave types from employee dropdowns — avoids master leave-type permissions.
+   */
+  async getLeaveTypesFromDropdowns(signal?: AbortSignal): Promise<DropdownItem[]> {
+    const response = await api.get<DropdownResponse>('/api/employee/dropdowns/', { signal })
+    return normalizeDropdownData(response.results?.data).leave_types
   },
 
   /**
@@ -153,12 +195,13 @@ export const employeeService = {
     total_pages: number;
     current_page: number;
   }> {
-    const response = await api.get<EmployeeListResponse>('/api/employee/employees-list/', {
+    const response = await api.get<EmployeeListPickerResponse>('/api/employee/employees-list/', {
       params: cleanParams(params),
       signal,
     });
+    const rawItems = response.results?.data ?? []
     return {
-      data: response.results?.data || [],
+      data: rawItems.map(mapEmployeeListWireItem),
       total_count: response.results?.total_count || 0,
       total_pages: response.results?.total_pages || 1,
       current_page: response.results?.current_page || 1,

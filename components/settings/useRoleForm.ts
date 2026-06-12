@@ -43,56 +43,80 @@ export function useRoleForm({
   const [isSaving, setIsSaving] = useState(false)
   const [isLoadingDetails, setIsLoadingDetails] = useState(false)
   const fetchIdRef = useRef(0)
+  const handleCancelFormRef = useRef(handleCancelForm)
+  const syncedFormKeyRef = useRef<string | null>(null)
 
   useEffect(() => {
-    if (action === 'edit' && roleEditId !== null) {
-      const role = roles.find((r) => r.id === roleEditId)
-      if (role) {
-        setRoleFormName(role.name)
-        setSelectedPermissionIds(role.permissions.map((p) => p.id))
-        setIsLoadingDetails(false)
-        return
-      }
+    handleCancelFormRef.current = handleCancelForm
+  }, [handleCancelForm])
 
-      if (roles.length === 0) return
+  useEffect(() => {
+    const formKey = `${action}:${roleEditId ?? 'new'}`
 
-      const fetchId = ++fetchIdRef.current
-      setIsLoadingDetails(true)
-
-      const fetchRoleDetails = async (): Promise<void> => {
-        try {
-          const roleDetails = await roleService.getRoleById(roleEditId)
-          if (fetchId !== fetchIdRef.current) return
-          if (roleDetails) {
-            setRoleFormName(roleDetails.name)
-            setSelectedPermissionIds(roleDetails.permissions.map((p) => p.id))
-          } else {
-            toast.error('Role not found')
-            handleCancelForm()
-          }
-        } catch {
-          if (fetchId !== fetchIdRef.current) return
-          toast.error('Failed to load role details')
-          handleCancelForm()
-        } finally {
-          if (fetchId === fetchIdRef.current) {
-            setIsLoadingDetails(false)
-          }
-        }
-      }
-
-      void fetchRoleDetails()
-    } else if (action === 'add') {
+    if (action === 'add') {
+      if (syncedFormKeyRef.current === formKey) return
+      syncedFormKeyRef.current = formKey
       setRoleFormName('')
       setSelectedPermissionIds([])
       setFormSearchQuery('')
       setIsLoadingDetails(false)
+      return
     }
+
+    if (action !== 'edit' || roleEditId === null) {
+      syncedFormKeyRef.current = null
+      return
+    }
+
+    const role = roles.find((r) => r.id === roleEditId)
+    if (role) {
+      if (syncedFormKeyRef.current === formKey) return
+      syncedFormKeyRef.current = formKey
+      setRoleFormName(role.name)
+      setSelectedPermissionIds(role.permissions.map((p) => p.id))
+      setIsLoadingDetails(false)
+      return
+    }
+
+    if (roles.length === 0) {
+      setIsLoadingDetails(true)
+      return
+    }
+
+    if (syncedFormKeyRef.current === formKey) return
+    syncedFormKeyRef.current = formKey
+
+    const fetchId = ++fetchIdRef.current
+    setIsLoadingDetails(true)
+
+    const fetchRoleDetails = async (): Promise<void> => {
+      try {
+        const roleDetails = await roleService.getRoleById(roleEditId)
+        if (fetchId !== fetchIdRef.current) return
+        if (roleDetails) {
+          setRoleFormName(roleDetails.name)
+          setSelectedPermissionIds(roleDetails.permissions.map((p) => p.id))
+        } else {
+          toast.error('Role not found')
+          handleCancelFormRef.current()
+        }
+      } catch {
+        if (fetchId !== fetchIdRef.current) return
+        toast.error('Failed to load role details')
+        handleCancelFormRef.current()
+      } finally {
+        if (fetchId === fetchIdRef.current) {
+          setIsLoadingDetails(false)
+        }
+      }
+    }
+
+    void fetchRoleDetails()
 
     return () => {
       fetchIdRef.current += 1
     }
-  }, [action, roleEditId, roles, handleCancelForm])
+  }, [action, roleEditId, roles])
 
   const handleTogglePermissionId = (id: number, checked: boolean): void => {
     if (checked) {

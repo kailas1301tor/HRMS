@@ -77,7 +77,13 @@ export function PayrollDashboard() {
     exportParams,
   } = usePayrollFilters()
 
-  const { employees, isEmployeesLoading } = usePayrollEmployeeSearch()
+  const {
+    employees,
+    employeeSearchQuery,
+    setEmployeeSearchQuery,
+    isEmployeesLoading,
+    employeesHasError,
+  } = usePayrollEmployeeSearch()
 
   const handleSuccess = useCallback(() => {
     setDashboardReloadToken((token) => token + 1)
@@ -265,6 +271,9 @@ export function PayrollDashboard() {
           employeeFilter={employeeFilter}
           employees={employees}
           isEmployeesLoading={isEmployeesLoading}
+          employeesHasError={employeesHasError}
+          employeeSearchQuery={employeeSearchQuery}
+          onEmployeeSearchChange={setEmployeeSearchQuery}
           onEmployeeChange={setEmployeeFilter}
           statusFilter={statusFilter}
           onStatusChange={setStatusFilter}

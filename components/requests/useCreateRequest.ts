@@ -5,7 +5,8 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { employeeRequestService } from '@/services/employee-request-service'
-import { leaveTypeService, type LeaveType } from '@/services/leave-type-service'
+import { employeeService } from '@/services/employee-service'
+import type { LeaveType } from '@/services/leave-type-service'
 import type { RequestChoiceItem } from '@/services/employee-request-service'
 import { useCurrentEmployee } from '@/hooks/use-current-employee'
 import { getApiErrorMessage } from '@/lib/helpers/api-error-message'
@@ -59,14 +60,14 @@ export function useCreateRequest({ defaultType }: UseCreateRequestOptions) {
       setIsLoadingMetadata(true)
       setHasMetadataError(false)
       try {
-        const [choices, types] = await Promise.all([
+        const [choices, typeItems] = await Promise.all([
           employeeRequestService.getRequestChoices(controller.signal),
-          leaveTypeService.getLeaveTypes(controller.signal),
+          employeeService.getLeaveTypesFromDropdowns(controller.signal),
         ])
         if (controller.signal.aborted || fetchId !== metadataFetchIdRef.current) return
         setSessionChoices(choices.session_choices)
         setDocumentTypeChoices(choices.document_request_type_choices)
-        setLeaveTypes(types)
+        setLeaveTypes(typeItems.map(({ id, name }) => ({ id, name })))
       } catch (error: unknown) {
         if (error instanceof Error && error.name === 'AbortError') return
         if (fetchId !== metadataFetchIdRef.current) return

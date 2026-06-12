@@ -9,8 +9,12 @@ import { Calendar } from 'lucide-react'
 import { uiSkeletonBlock } from '@/lib/ui/design-system'
 import type { DashboardAttendanceDay } from '@/types/dashboard'
 
+const ZERO_ATTENDANCE_COLOR =
+  'bg-slate-400/30 border border-slate-400/40'
+
 function getColorIntensity(value: number, max: number): string {
-  if (value === 0 || max === 0) return 'bg-midnight'
+  if (value === 0) return ZERO_ATTENDANCE_COLOR
+  if (max === 0) return ZERO_ATTENDANCE_COLOR
   const ratio = value / max
   if (ratio < 0.25) return 'bg-violet-core/20'
   if (ratio < 0.5) return 'bg-violet-core/40'
@@ -105,7 +109,7 @@ export function AttendanceHeatmap({ days, isLoading = false }: AttendanceHeatmap
       <div className="flex items-center justify-end gap-2 mt-4 text-[10px] text-slate-500">
         <span>Less</span>
         <div className="flex gap-1">
-          <div className="w-3 h-3 rounded-sm bg-midnight" />
+          <div className={cn('w-3 h-3 rounded-sm', ZERO_ATTENDANCE_COLOR)} />
           <div className="w-3 h-3 rounded-sm bg-violet-core/20" />
           <div className="w-3 h-3 rounded-sm bg-violet-core/40" />
           <div className="w-3 h-3 rounded-sm bg-violet-core/60" />
